@@ -1,1 +1,757 @@
-<!DOCTYPE html><html lang="zh-CN" data-default-color-scheme="auto"><head><meta charset="UTF-8"><link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png"><link rel="icon" href="/img/fluid.png"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,shrink-to-fit=no"><meta http-equiv="x-ua-compatible" content="ie=edge"><meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"><meta name="theme-color" content="#2f4154"><meta name="author" content="625"><meta name="keywords" content=""><meta name="description" content="代码如下1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889909192939495969798991001011"><meta property="og:type" content="article"><meta property="og:title" content="实现基于Redis的lua的分布式锁"><meta property="og:url" content="https://kanchai.club/2022/12/10/%E5%AE%9E%E7%8E%B0%E5%9F%BA%E4%BA%8ERedis%E7%9A%84lua%E7%9A%84%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/index.html"><meta property="og:site_name" content="625"><meta property="og:description" content="代码如下1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889909192939495969798991001011"><meta property="og:locale" content="zh_CN"><meta property="article:published_time" content="2022-12-10T08:53:33.533Z"><meta property="article:modified_time" content="2022-12-10T08:53:33.533Z"><meta property="article:author" content="625"><meta property="article:tag" content="分布式"><meta property="article:tag" content="Redis"><meta name="twitter:card" content="summary_large_image"><meta name="referrer" content="no-referrer-when-downgrade"><title>实现基于Redis的lua的分布式锁 - 625</title><link rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css"><link rel="stylesheet" href="/css/main.css"><link id="highlight-css" rel="stylesheet" href="/css/highlight.css"><link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css"><script id="fluid-configs">var Fluid=window.Fluid||{};Fluid.ctx=Object.assign({},Fluid.ctx);var CONFIG={hostname:"kanchai.club",root:"/",version:"1.9.3",typing:{enable:!0,typeSpeed:70,cursorChar:"_",loop:!1,scope:[]},anchorjs:{enable:!0,element:"h1,h2,h3,h4,h5,h6",placement:"left",visible:"hover",icon:""},progressbar:{enable:!0,height_px:3,color:"#29d",options:{showSpinner:!1,trickleSpeed:100}},code_language:{enable:!0,default:"TEXT"},copy_btn:!0,image_caption:{enable:!0},image_zoom:{enable:!0,img_url_replace:["",""]},toc:{enable:!0,placement:"right",headingSelector:"h1,h2,h3,h4,h5,h6",collapseDepth:0},lazyload:{enable:!0,loading_img:"/img/loading.gif",onlypost:!1,offset_factor:2},web_analytics:{enable:!0,follow_dnt:!0,baidu:"8b23e0bc706b35d094ee08fd97ebfbed",google:null,gtag:null,tencent:{sid:null,cid:null},woyaola:null,cnzz:null,leancloud:{app_id:null,app_key:null,server_url:null,path:"window.location.pathname",ignore_local:!1}},search_path:"/local-search.xml"};if(CONFIG.web_analytics.follow_dnt){var dntVal=navigator.doNotTrack||window.doNotTrack||navigator.msDoNotTrack;Fluid.ctx.dnt=dntVal&&(dntVal.startsWith("1")||dntVal.startsWith("yes")||dntVal.startsWith("on"))}</script><script src="/js/utils.js"></script><script src="/js/color-schema.js"></script><script async>if(!Fluid.ctx.dnt){var _hmt=_hmt||[];!function(){var e=document.createElement("script");e.src="https://hm.baidu.com/hm.js?8b23e0bc706b35d094ee08fd97ebfbed";var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)}()}</script><meta name="generator" content="Hexo 6.2.0"></head><body><header><div class="header-inner" style="height:70vh"><nav id="navbar" class="navbar fixed-top navbar-expand-lg navbar-dark scrolling-navbar"><div class="container"><a class="navbar-brand" href="/"><strong>625</strong> </a><button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><div class="animated-icon"><span></span><span></span><span></span></div></button><div class="collapse navbar-collapse" id="navbarSupportedContent"><ul class="navbar-nav ml-auto text-center"><li class="nav-item"><a class="nav-link" href="/"><i class="iconfont icon-home-fill"></i> 首页</a></li><li class="nav-item"><a class="nav-link" href="/archives/"><i class="iconfont icon-archive-fill"></i> 归档</a></li><li class="nav-item"><a class="nav-link" href="/categories/"><i class="iconfont icon-category-fill"></i> 分类</a></li><li class="nav-item"><a class="nav-link" href="/tags/"><i class="iconfont icon-tags-fill"></i> 标签</a></li><li class="nav-item"><a class="nav-link" href="/about/"><i class="iconfont icon-user-fill"></i> 关于</a></li><li class="nav-item" id="search-btn"><a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">&nbsp;<i class="iconfont icon-search"></i>&nbsp;</a></li><li class="nav-item" id="color-toggle-btn"><a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a></li></ul></div></div></nav><div id="banner" class="banner" parallax="true" style="background:url(/img/default.png) no-repeat center center;background-size:cover"><div class="full-bg-img"><div class="mask flex-center" style="background-color:rgba(0,0,0,.3)"><div class="banner-text text-center fade-in-up"><div class="h2"><span id="subtitle" data-typed-text="实现基于Redis的lua的分布式锁"></span></div><div class="mt-3"><span class="post-meta mr-2"><i class="iconfont icon-author" aria-hidden="true"></i> 625 </span><span class="post-meta"><i class="iconfont icon-date-fill" aria-hidden="true"></i> <time datetime="2022-12-10 16:53" pubdate>2022年12月10日 下午</time></span></div><div class="mt-1"><span class="post-meta mr-2"><i class="iconfont icon-chart"></i> 3.1k 字 </span><span class="post-meta mr-2"><i class="iconfont icon-clock-fill"></i> 26 分钟 </span><span id="busuanzi_container_page_pv" style="display:none"><i class="iconfont icon-eye" aria-hidden="true"></i> <span id="busuanzi_value_page_pv"></span> 次</span></div></div></div></div></div></div></header><main><div class="container-fluid nopadding-x"><div class="row nomargin-x"><div class="side-col d-none d-lg-block col-lg-2"></div><div class="col-lg-8 nopadding-x-md"><div class="container nopadding-x-md" id="board-ctn"><div id="board"><article class="post-content mx-auto"><h1 style="display:none">实现基于Redis的lua的分布式锁</h1><div class="markdown-body"><h3 id="代码如下"><a href="#代码如下" class="headerlink" title="代码如下"></a>代码如下</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">package</span> com.ym.common.utils.redis;<br><br><span class="hljs-keyword">import</span> com.ym.common.utils.Sha1Util;<br><span class="hljs-keyword">import</span> com.ym.common.utils.spring.SpringUtil;<br><span class="hljs-keyword">import</span> org.slf4j.Logger;<br><span class="hljs-keyword">import</span> org.slf4j.LoggerFactory;<br><span class="hljs-keyword">import</span> org.springframework.data.redis.core.RedisTemplate;<br><span class="hljs-keyword">import</span> org.springframework.data.redis.core.script.RedisScript;<br><br><span class="hljs-keyword">import</span> java.util.Collections;<br><br><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 基于redis lua分布式锁</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@author</span>: 李涛</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@version</span>: 2019年05月08日 16:15</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">RedisLockUtil</span> &#123;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">Logger</span> <span class="hljs-variable">LOGGER</span> <span class="hljs-operator">=</span> LoggerFactory.getLogger(RedisLockUtil.class);<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 成功标识</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">Long</span> <span class="hljs-variable">SUCCESS</span> <span class="hljs-operator">=</span> <span class="hljs-number">1L</span>;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 加锁lua脚本,不可重入,reqId只是为了解锁使用,代表当前线程在使用资源,给UUID比较好</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">String</span> <span class="hljs-variable">SCRIPT_LOCK</span> <span class="hljs-operator">=</span> <span class="hljs-string">&quot;if redis.call(&#x27;setnx&#x27;, KEYS[1], ARGV[1]) == 1 then redis.call(&#x27;pexpire&#x27;, KEYS[1], ARGV[2]) return 1 else return 0 end&quot;</span>;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 解锁lua脚本</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">String</span> <span class="hljs-variable">SCRIPT_UNLOCK</span> <span class="hljs-operator">=</span> <span class="hljs-string">&quot;if redis.call(&#x27;get&#x27;, KEYS[1]) == ARGV[1] then return redis.call(&#x27;del&#x27;, KEYS[1]) else return 0 end&quot;</span>;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 加锁脚本sha1值</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">String</span> <span class="hljs-variable">SCRIPT_LOCK_SHA1</span> <span class="hljs-operator">=</span> Sha1Util.encrypt(SCRIPT_LOCK);<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 解锁脚本sha1值</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">String</span> <span class="hljs-variable">SCRIPT_UNLOCK_SHA1</span> <span class="hljs-operator">=</span> Sha1Util.encrypt(SCRIPT_UNLOCK);<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 内部持有模板</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">RedisTemplate</span> <span class="hljs-variable">redisTemplate</span> <span class="hljs-operator">=</span> (RedisTemplate) SpringUtil.getObject(<span class="hljs-string">&quot;redisTemplate&quot;</span>);<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 尝试获取分布式锁</span><br><span class="hljs-comment">     *</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@param</span> lockKey                锁</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@param</span> requestId              请求标识,唯一ID</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@param</span> expireTimeMilliseconds 超期时间，多少毫秒后这把锁自动释放</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@return</span> 返回true表示拿到锁</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-type">boolean</span> <span class="hljs-title function_">tryGetDistributedLock</span><span class="hljs-params">(String lockKey, String requestId, <span class="hljs-type">int</span> expireTimeMilliseconds)</span> &#123;<br>        LOGGER.info(<span class="hljs-string">&quot;[&#123;&#125;]尝试获取[&#123;&#125;]锁,超时时间为:&#123;&#125;毫秒&quot;</span>, requestId, lockKey, expireTimeMilliseconds);<br>        <span class="hljs-comment">/**</span><br><span class="hljs-comment">         * 脚本设置</span><br><span class="hljs-comment">         */</span><br>        RedisScript&lt;Long&gt; redisScript = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RedisScript</span>&lt;Long&gt;() &#123;<br>            <span class="hljs-meta">@Override</span><br>            <span class="hljs-keyword">public</span> String <span class="hljs-title function_">getSha1</span><span class="hljs-params">()</span> &#123;<br>                <span class="hljs-keyword">return</span> SCRIPT_LOCK_SHA1;<br>            &#125;<br><br>            <span class="hljs-meta">@Override</span><br>            <span class="hljs-keyword">public</span> Class&lt;Long&gt; <span class="hljs-title function_">getResultType</span><span class="hljs-params">()</span> &#123;<br>                <span class="hljs-keyword">return</span> Long.class;<br>            &#125;<br><br>            <span class="hljs-meta">@Override</span><br>            <span class="hljs-keyword">public</span> String <span class="hljs-title function_">getScriptAsString</span><span class="hljs-params">()</span> &#123;<br>                <span class="hljs-keyword">return</span> SCRIPT_LOCK;<br>            &#125;<br><br>        &#125;;<br>        <span class="hljs-type">Object</span> <span class="hljs-variable">result</span> <span class="hljs-operator">=</span> redisTemplate.execute(<br>                redisScript,<span class="hljs-comment">// lua脚本</span><br>                Collections.singletonList(lockKey),<span class="hljs-comment">// KEYS[1]</span><br>                requestId, <span class="hljs-comment">// ARGV[1]</span><br>                expireTimeMilliseconds <span class="hljs-comment">// ARGV[2]</span><br>        );<br>        <span class="hljs-type">boolean</span> <span class="hljs-variable">b</span> <span class="hljs-operator">=</span> SUCCESS.equals(result);<br>        LOGGER.info(<span class="hljs-string">&quot;释放结果:&quot;</span>, b);<br>        <span class="hljs-keyword">return</span> b;<br>    &#125;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 释放分布式锁</span><br><span class="hljs-comment">     *</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@param</span> lockKey   锁</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@param</span> requestId 请求标识</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@return</span> 返回true表示释放锁成功</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-type">boolean</span> <span class="hljs-title function_">releaseDistributedLock</span><span class="hljs-params">(String lockKey, String requestId)</span> &#123;<br>        LOGGER.info(<span class="hljs-string">&quot;[&#123;&#125;]释放锁[&#123;&#125;]锁&quot;</span>, requestId, lockKey);<br><br>        <span class="hljs-comment">/**</span><br><span class="hljs-comment">         * lua脚本</span><br><span class="hljs-comment">         */</span><br>        RedisScript&lt;Long&gt; redisScript = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RedisScript</span>&lt;Long&gt;() &#123;<br>            <span class="hljs-meta">@Override</span><br>            <span class="hljs-keyword">public</span> String <span class="hljs-title function_">getSha1</span><span class="hljs-params">()</span> &#123;<br>                <span class="hljs-keyword">return</span> SCRIPT_UNLOCK_SHA1;<br>            &#125;<br><br>            <span class="hljs-meta">@Override</span><br>            <span class="hljs-keyword">public</span> Class&lt;Long&gt; <span class="hljs-title function_">getResultType</span><span class="hljs-params">()</span> &#123;<br>                <span class="hljs-keyword">return</span> Long.class;<br>            &#125;<br><br>            <span class="hljs-meta">@Override</span><br>            <span class="hljs-keyword">public</span> String <span class="hljs-title function_">getScriptAsString</span><span class="hljs-params">()</span> &#123;<br>                <span class="hljs-keyword">return</span> SCRIPT_UNLOCK;<br>            &#125;<br><br>        &#125;;<br>        <span class="hljs-type">Object</span> <span class="hljs-variable">result</span> <span class="hljs-operator">=</span> redisTemplate.execute(<br>                redisScript,<br>                Collections.singletonList(lockKey),<br>                requestId<br>        );<br>        <span class="hljs-type">boolean</span> <span class="hljs-variable">b</span> <span class="hljs-operator">=</span> SUCCESS.equals(result);<br>        LOGGER.info(<span class="hljs-string">&quot;释放结果:&quot;</span>, b);<br>        <span class="hljs-keyword">return</span> b;<br>    &#125;<br>&#125;<br><br></code></pre></td></tr></table></figure></div><hr><div><div class="post-metas my-3"><div class="post-meta mr-3 d-flex align-items-center"><i class="iconfont icon-category"></i> <span class="category-chains"><span class="category-chain"><a href="/categories/Redis/" class="category-chain-item">Redis</a></span></span></div><div class="post-meta"><i class="iconfont icon-tags"></i> <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/">#分布式</a> <a href="/tags/Redis/">#Redis</a></div></div><div class="license-box my-3"><div class="license-title"><div>实现基于Redis的lua的分布式锁</div><div>https://kanchai.club/2022/12/10/实现基于Redis的lua的分布式锁/</div></div><div class="license-meta"><div class="license-meta-item"><div>作者</div><div>625</div></div><div class="license-meta-item license-meta-date"><div>发布于</div><div>2022年12月10日</div></div><div class="license-meta-item"><div>许可协议</div><div><a target="_blank" href="https://creativecommons.org/licenses/by/4.0/"><span class="hint--top hint--rounded" aria-label="BY - 署名"><i class="iconfont icon-by"></i></span></a></div></div></div><div class="license-icon iconfont"></div></div><div class="post-prevnext my-3"><article class="post-prev col-6"><a href="/2022/12/10/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1/" title="基于Delayed实现一个定时延时任务"><i class="iconfont icon-arrowleft"></i> <span class="hidden-mobile">基于Delayed实现一个定时延时任务</span> <span class="visible-mobile">上一篇</span></a></article><article class="post-next col-6"><a href="/2022/12/10/%E5%AF%BC%E8%88%AA%E6%8E%A5%E5%8F%A3%E8%B0%83%E7%94%A8/"><span class="hidden-mobile"></span> <span class="visible-mobile">下一篇</span> <i class="iconfont icon-arrowright"></i></a></article></div></div><article id="comments" lazyload><div id="giscus" class="giscus"></div><script type="text/javascript">Fluid.utils.loadComments("#giscus",(function(){var t={repo:"stupdit1t/625","repo-id":"MDEwOlJlcG9zaXRvcnkyNDQ3ODMzOTM=",category:"General","category-id":"DIC_kwDODpcZIc4CSeTH","theme-light":"light","theme-dark":"dark",mapping:"pathname","reactions-enabled":1,"emit-metadata":0,"input-position":"top",lang:"zh-CN","//mapping":"title"},e={};for(let i in t){if(!i.startsWith("theme-"))e[i.startsWith("data-")?i:"data-"+i]=t[i]}window.GiscusThemeLight="light",window.GiscusThemeDark="dark",e["data-theme"]="dark"===document.documentElement.getAttribute("data-user-color-scheme")?"dark":"light";for(let t in e){var i=e[t];null!=i&&""!==i||delete e[t]}var a=document.createElement("script");a.setAttribute("src","https://giscus.app/client.js"),a.setAttribute("crossorigin","anonymous");for(let t in e)a.setAttribute(t,e[t]);var n=document.getElementsByTagName("script"),r=n.length>0?n[n.length-1]:document.head||document.documentElement;r.parentNode.insertBefore(a,r.nextSibling)}))</script><noscript>Please enable JavaScript to view the comments</noscript></article></article></div></div></div><div class="side-col d-none d-lg-block col-lg-2"><aside class="sidebar" style="margin-left:-1rem"><div id="toc"><p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p><div class="toc-body" id="toc-body"></div></div></aside></div></div></div><a id="scroll-top-button" aria-label="TOP" href="#" role="button"><i class="iconfont icon-arrowup" aria-hidden="true"></i></a><div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable modal-lg" role="document"><div class="modal-content"><div class="modal-header text-center"><h4 class="modal-title w-100 font-weight-bold">搜索</h4><button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body mx-3"><div class="md-form mb-5"><input type="text" id="local-search-input" class="form-control validate"> <label data-error="x" data-success="v" for="local-search-input">关键词</label></div><div class="list-group" id="local-search-result"></div></div></div></div></div></main><footer><div class="footer-inner"><div class="footer-content"><a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/stupdit1t" target="_blank" rel="nofollow noopener"><span>625</span></a></div><div class="statistics"><span id="busuanzi_container_site_pv" style="display:none">总访问量 <span id="busuanzi_value_site_pv"></span> 次 </span><span id="busuanzi_container_site_uv" style="display:none">总访客数 <span id="busuanzi_value_site_uv"></span> 人</span></div></div></footer><script src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js"></script><link rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css"><script>NProgress.configure({showSpinner:!1,trickleSpeed:100}),NProgress.start(),window.addEventListener("load",(function(){NProgress.done()}))</script><script src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js"></script><script src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js"></script><script src="/js/events.js"></script><script src="/js/plugins.js"></script><script src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js"></script><script>!function(t,e){var i=Fluid.plugins.typing,n=e.getElementById("subtitle");n&&i&&i(n.getAttribute("data-typed-text"))}(window,document)</script><script src="/js/img-lazyload.js"></script><script>Fluid.utils.createScript("https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js",(function(){var t=jQuery("#toc");if(0!==t.length&&window.tocbot){var i=jQuery("#board-ctn").offset().top;window.tocbot.init(Object.assign({tocSelector:"#toc-body",contentSelector:".markdown-body",linkClass:"tocbot-link",activeLinkClass:"tocbot-active-link",listClass:"tocbot-list",isCollapsedClass:"tocbot-is-collapsed",collapsibleClass:"tocbot-is-collapsible",scrollSmooth:!0,includeTitleTags:!0,headingsOffset:-i},CONFIG.toc)),t.find(".toc-list-item").length>0&&t.css("visibility","visible"),Fluid.events.registerRefreshCallback((function(){if("tocbot"in window){tocbot.refresh();var t=jQuery("#toc");if(0===t.length||!tocbot)return;t.find(".toc-list-item").length>0&&t.css("visibility","visible")}}))}}))</script><script src="https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js"></script><script>Fluid.plugins.codeWidget()</script><script>Fluid.utils.createScript("https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js",(function(){window.anchors.options={placement:CONFIG.anchorjs.placement,visible:CONFIG.anchorjs.visible},CONFIG.anchorjs.icon&&(window.anchors.options.icon=CONFIG.anchorjs.icon);var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(window.anchors.options.class="anchorjs-link-left"),window.anchors.add(o.join(", ")),Fluid.events.registerRefreshCallback((function(){if("anchors"in window){anchors.removeAll();var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(anchors.options.class="anchorjs-link-left"),anchors.add(o.join(", "))}}))}))</script><script>Fluid.utils.createScript("https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js",(function(){Fluid.plugins.fancyBox()}))</script><script>Fluid.plugins.imageCaption()</script><script src="/js/local-search.js"></script><script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script src="/js/boot.js"></script><noscript><div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div></noscript></body></html>
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="625">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="代码如下1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889909192939495969798991001011">
+<meta property="og:type" content="article">
+<meta property="og:title" content="实现基于Redis的lua的分布式锁">
+<meta property="og:url" content="https://kanchai.club/2022/12/10/%E5%AE%9E%E7%8E%B0%E5%9F%BA%E4%BA%8ERedis%E7%9A%84lua%E7%9A%84%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/index.html">
+<meta property="og:site_name" content="625">
+<meta property="og:description" content="代码如下1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677787980818283848586878889909192939495969798991001011">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-12-10T08:53:33.533Z">
+<meta property="article:modified_time" content="2022-12-10T08:53:33.533Z">
+<meta property="article:author" content="625">
+<meta property="article:tag" content="分布式">
+<meta property="article:tag" content="Redis">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>实现基于Redis的lua的分布式锁 - 625</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"kanchai.club","root":"/","version":"1.9.3","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":"8b23e0bc706b35d094ee08fd97ebfbed","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+    <!-- Baidu Analytics -->
+    <script async>
+      if (!Fluid.ctx.dnt) {
+        var _hmt = _hmt || [];
+        (function() {
+          var hm = document.createElement("script");
+          hm.src = "https://hm.baidu.com/hm.js?8b23e0bc706b35d094ee08fd97ebfbed";
+          var s = document.getElementsByTagName("script")[0];
+          s.parentNode.insertBefore(hm, s);
+        })();
+      }
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>625</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="实现基于Redis的lua的分布式锁"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-author" aria-hidden="true"></i>
+        625
+      </span>
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-12-10 16:53" pubdate>
+          2022年12月10日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.1k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          26 分钟
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">实现基于Redis的lua的分布式锁</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h3 id="代码如下"><a href="#代码如下" class="headerlink" title="代码如下"></a>代码如下</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">package</span> com.ym.common.utils.redis;<br><br><span class="hljs-keyword">import</span> com.ym.common.utils.Sha1Util;<br><span class="hljs-keyword">import</span> com.ym.common.utils.spring.SpringUtil;<br><span class="hljs-keyword">import</span> org.slf4j.Logger;<br><span class="hljs-keyword">import</span> org.slf4j.LoggerFactory;<br><span class="hljs-keyword">import</span> org.springframework.data.redis.core.RedisTemplate;<br><span class="hljs-keyword">import</span> org.springframework.data.redis.core.script.RedisScript;<br><br><span class="hljs-keyword">import</span> java.util.Collections;<br><br><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 基于redis lua分布式锁</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@author</span>: 李涛</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@version</span>: 2019年05月08日 16:15</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">RedisLockUtil</span> &#123;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">Logger</span> <span class="hljs-variable">LOGGER</span> <span class="hljs-operator">=</span> LoggerFactory.getLogger(RedisLockUtil.class);<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 成功标识</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">Long</span> <span class="hljs-variable">SUCCESS</span> <span class="hljs-operator">=</span> <span class="hljs-number">1L</span>;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 加锁lua脚本,不可重入,reqId只是为了解锁使用,代表当前线程在使用资源,给UUID比较好</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">String</span> <span class="hljs-variable">SCRIPT_LOCK</span> <span class="hljs-operator">=</span> <span class="hljs-string">&quot;if redis.call(&#x27;setnx&#x27;, KEYS[1], ARGV[1]) == 1 then redis.call(&#x27;pexpire&#x27;, KEYS[1], ARGV[2]) return 1 else return 0 end&quot;</span>;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 解锁lua脚本</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">String</span> <span class="hljs-variable">SCRIPT_UNLOCK</span> <span class="hljs-operator">=</span> <span class="hljs-string">&quot;if redis.call(&#x27;get&#x27;, KEYS[1]) == ARGV[1] then return redis.call(&#x27;del&#x27;, KEYS[1]) else return 0 end&quot;</span>;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 加锁脚本sha1值</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">String</span> <span class="hljs-variable">SCRIPT_LOCK_SHA1</span> <span class="hljs-operator">=</span> Sha1Util.encrypt(SCRIPT_LOCK);<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 解锁脚本sha1值</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">String</span> <span class="hljs-variable">SCRIPT_UNLOCK_SHA1</span> <span class="hljs-operator">=</span> Sha1Util.encrypt(SCRIPT_UNLOCK);<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 内部持有模板</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">RedisTemplate</span> <span class="hljs-variable">redisTemplate</span> <span class="hljs-operator">=</span> (RedisTemplate) SpringUtil.getObject(<span class="hljs-string">&quot;redisTemplate&quot;</span>);<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 尝试获取分布式锁</span><br><span class="hljs-comment">     *</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@param</span> lockKey                锁</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@param</span> requestId              请求标识,唯一ID</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@param</span> expireTimeMilliseconds 超期时间，多少毫秒后这把锁自动释放</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@return</span> 返回true表示拿到锁</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-type">boolean</span> <span class="hljs-title function_">tryGetDistributedLock</span><span class="hljs-params">(String lockKey, String requestId, <span class="hljs-type">int</span> expireTimeMilliseconds)</span> &#123;<br>        LOGGER.info(<span class="hljs-string">&quot;[&#123;&#125;]尝试获取[&#123;&#125;]锁,超时时间为:&#123;&#125;毫秒&quot;</span>, requestId, lockKey, expireTimeMilliseconds);<br>        <span class="hljs-comment">/**</span><br><span class="hljs-comment">         * 脚本设置</span><br><span class="hljs-comment">         */</span><br>        RedisScript&lt;Long&gt; redisScript = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RedisScript</span>&lt;Long&gt;() &#123;<br>            <span class="hljs-meta">@Override</span><br>            <span class="hljs-keyword">public</span> String <span class="hljs-title function_">getSha1</span><span class="hljs-params">()</span> &#123;<br>                <span class="hljs-keyword">return</span> SCRIPT_LOCK_SHA1;<br>            &#125;<br><br>            <span class="hljs-meta">@Override</span><br>            <span class="hljs-keyword">public</span> Class&lt;Long&gt; <span class="hljs-title function_">getResultType</span><span class="hljs-params">()</span> &#123;<br>                <span class="hljs-keyword">return</span> Long.class;<br>            &#125;<br><br>            <span class="hljs-meta">@Override</span><br>            <span class="hljs-keyword">public</span> String <span class="hljs-title function_">getScriptAsString</span><span class="hljs-params">()</span> &#123;<br>                <span class="hljs-keyword">return</span> SCRIPT_LOCK;<br>            &#125;<br><br>        &#125;;<br>        <span class="hljs-type">Object</span> <span class="hljs-variable">result</span> <span class="hljs-operator">=</span> redisTemplate.execute(<br>                redisScript,<span class="hljs-comment">// lua脚本</span><br>                Collections.singletonList(lockKey),<span class="hljs-comment">// KEYS[1]</span><br>                requestId, <span class="hljs-comment">// ARGV[1]</span><br>                expireTimeMilliseconds <span class="hljs-comment">// ARGV[2]</span><br>        );<br>        <span class="hljs-type">boolean</span> <span class="hljs-variable">b</span> <span class="hljs-operator">=</span> SUCCESS.equals(result);<br>        LOGGER.info(<span class="hljs-string">&quot;释放结果:&quot;</span>, b);<br>        <span class="hljs-keyword">return</span> b;<br>    &#125;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 释放分布式锁</span><br><span class="hljs-comment">     *</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@param</span> lockKey   锁</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@param</span> requestId 请求标识</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@return</span> 返回true表示释放锁成功</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-type">boolean</span> <span class="hljs-title function_">releaseDistributedLock</span><span class="hljs-params">(String lockKey, String requestId)</span> &#123;<br>        LOGGER.info(<span class="hljs-string">&quot;[&#123;&#125;]释放锁[&#123;&#125;]锁&quot;</span>, requestId, lockKey);<br><br>        <span class="hljs-comment">/**</span><br><span class="hljs-comment">         * lua脚本</span><br><span class="hljs-comment">         */</span><br>        RedisScript&lt;Long&gt; redisScript = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RedisScript</span>&lt;Long&gt;() &#123;<br>            <span class="hljs-meta">@Override</span><br>            <span class="hljs-keyword">public</span> String <span class="hljs-title function_">getSha1</span><span class="hljs-params">()</span> &#123;<br>                <span class="hljs-keyword">return</span> SCRIPT_UNLOCK_SHA1;<br>            &#125;<br><br>            <span class="hljs-meta">@Override</span><br>            <span class="hljs-keyword">public</span> Class&lt;Long&gt; <span class="hljs-title function_">getResultType</span><span class="hljs-params">()</span> &#123;<br>                <span class="hljs-keyword">return</span> Long.class;<br>            &#125;<br><br>            <span class="hljs-meta">@Override</span><br>            <span class="hljs-keyword">public</span> String <span class="hljs-title function_">getScriptAsString</span><span class="hljs-params">()</span> &#123;<br>                <span class="hljs-keyword">return</span> SCRIPT_UNLOCK;<br>            &#125;<br><br>        &#125;;<br>        <span class="hljs-type">Object</span> <span class="hljs-variable">result</span> <span class="hljs-operator">=</span> redisTemplate.execute(<br>                redisScript,<br>                Collections.singletonList(lockKey),<br>                requestId<br>        );<br>        <span class="hljs-type">boolean</span> <span class="hljs-variable">b</span> <span class="hljs-operator">=</span> SUCCESS.equals(result);<br>        LOGGER.info(<span class="hljs-string">&quot;释放结果:&quot;</span>, b);<br>        <span class="hljs-keyword">return</span> b;<br>    &#125;<br>&#125;<br><br></code></pre></td></tr></table></figure>
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Redis/" class="category-chain-item">Redis</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/">#分布式</a>
+      
+        <a href="/tags/Redis/">#Redis</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>实现基于Redis的lua的分布式锁</div>
+      <div>https://kanchai.club/2022/12/10/实现基于Redis的lua的分布式锁/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>625</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年12月10日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/12/10/%E6%89%8B%E5%8A%A8%E5%AE%9E%E7%8E%B0%E5%8D%95%E6%9C%8D%E5%8A%A1%E7%9A%84cloud%20bus%E5%8A%9F%E8%83%BD/" title="手动实现单服务的cloud bus功能">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">手动实现单服务的cloud bus功能</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/12/10/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E5%BB%B6%E6%97%B6%E4%BB%BB%E5%8A%A1/" title="基于Delayed实现一个定时延时任务">
+                        <span class="hidden-mobile">基于Delayed实现一个定时延时任务</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+    <div id="giscus" class="giscus"></div>
+    <script type="text/javascript">
+      Fluid.utils.loadComments('#giscus', function() {
+        var options = {"repo":"stupdit1t/625","repo-id":"MDEwOlJlcG9zaXRvcnkyNDQ3ODMzOTM=","category":"General","category-id":"DIC_kwDODpcZIc4CSeTH","theme-light":"light","theme-dark":"dark","mapping":"pathname","reactions-enabled":1,"emit-metadata":0,"input-position":"top","lang":"zh-CN","//mapping":"title"};
+        var attributes = {};
+        for (let option in options) {
+          if (!option.startsWith('theme-')) {
+            var key = option.startsWith('data-') ? option : 'data-' + option;
+            attributes[key] = options[option];
+          }
+        }
+        var light = 'light';
+        var dark = 'dark';
+        window.GiscusThemeLight = light;
+        window.GiscusThemeDark = dark;
+        attributes['data-theme'] = document.documentElement.getAttribute('data-user-color-scheme') === 'dark' ? dark : light;
+        for (let attribute in attributes) {
+          var value = attributes[attribute];
+          if (value === undefined || value === null || value === '') {
+            delete attributes[attribute];
+          }
+        }
+        var s = document.createElement('script');
+        s.setAttribute('src', 'https://giscus.app/client.js');
+        s.setAttribute('crossorigin', 'anonymous');
+        for (let attribute in attributes) {
+          s.setAttribute(attribute, attributes[attribute]);
+        }
+        var ss = document.getElementsByTagName('script');
+        var e = ss.length > 0 ? ss[ss.length - 1] : document.head || document.documentElement;
+        e.parentNode.insertBefore(s, e.nextSibling);
+      });
+    </script>
+    <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/stupdit1t" target="_blank" rel="nofollow noopener"><span>625</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

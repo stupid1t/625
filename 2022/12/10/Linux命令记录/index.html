@@ -1,1 +1,859 @@
-<!DOCTYPE html><html lang="zh-CN" data-default-color-scheme="auto"><head><meta charset="UTF-8"><link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png"><link rel="icon" href="/img/fluid.png"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,shrink-to-fit=no"><meta http-equiv="x-ua-compatible" content="ie=edge"><meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"><meta name="theme-color" content="#2f4154"><meta name="author" content="625"><meta name="keywords" content=""><meta name="description" content="记录一些日常用到的基础命令,防止重复去百度搜索,主要是Centos中,个人记不住的一些命令,ls什么的肯定没有记录"><meta property="og:type" content="article"><meta property="og:title" content="一些常用的linux基础命令"><meta property="og:url" content="https://kanchai.club/2022/12/10/Linux%E5%91%BD%E4%BB%A4%E8%AE%B0%E5%BD%95/index.html"><meta property="og:site_name" content="625"><meta property="og:description" content="记录一些日常用到的基础命令,防止重复去百度搜索,主要是Centos中,个人记不住的一些命令,ls什么的肯定没有记录"><meta property="og:locale" content="zh_CN"><meta property="article:published_time" content="2022-12-10T08:53:33.522Z"><meta property="article:modified_time" content="2022-12-10T08:53:33.522Z"><meta property="article:author" content="625"><meta property="article:tag" content="基础命令"><meta property="article:tag" content="Jvm"><meta name="twitter:card" content="summary_large_image"><meta name="referrer" content="no-referrer-when-downgrade"><title>一些常用的linux基础命令 - 625</title><link rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css"><link rel="stylesheet" href="/css/main.css"><link id="highlight-css" rel="stylesheet" href="/css/highlight.css"><link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css"><script id="fluid-configs">var Fluid=window.Fluid||{};Fluid.ctx=Object.assign({},Fluid.ctx);var CONFIG={hostname:"kanchai.club",root:"/",version:"1.9.3",typing:{enable:!0,typeSpeed:70,cursorChar:"_",loop:!1,scope:[]},anchorjs:{enable:!0,element:"h1,h2,h3,h4,h5,h6",placement:"left",visible:"hover",icon:""},progressbar:{enable:!0,height_px:3,color:"#29d",options:{showSpinner:!1,trickleSpeed:100}},code_language:{enable:!0,default:"TEXT"},copy_btn:!0,image_caption:{enable:!0},image_zoom:{enable:!0,img_url_replace:["",""]},toc:{enable:!0,placement:"right",headingSelector:"h1,h2,h3,h4,h5,h6",collapseDepth:0},lazyload:{enable:!0,loading_img:"/img/loading.gif",onlypost:!1,offset_factor:2},web_analytics:{enable:!0,follow_dnt:!0,baidu:"8b23e0bc706b35d094ee08fd97ebfbed",google:null,gtag:null,tencent:{sid:null,cid:null},woyaola:null,cnzz:null,leancloud:{app_id:null,app_key:null,server_url:null,path:"window.location.pathname",ignore_local:!1}},search_path:"/local-search.xml"};if(CONFIG.web_analytics.follow_dnt){var dntVal=navigator.doNotTrack||window.doNotTrack||navigator.msDoNotTrack;Fluid.ctx.dnt=dntVal&&(dntVal.startsWith("1")||dntVal.startsWith("yes")||dntVal.startsWith("on"))}</script><script src="/js/utils.js"></script><script src="/js/color-schema.js"></script><script async>if(!Fluid.ctx.dnt){var _hmt=_hmt||[];!function(){var e=document.createElement("script");e.src="https://hm.baidu.com/hm.js?8b23e0bc706b35d094ee08fd97ebfbed";var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)}()}</script><meta name="generator" content="Hexo 6.2.0"></head><body><header><div class="header-inner" style="height:70vh"><nav id="navbar" class="navbar fixed-top navbar-expand-lg navbar-dark scrolling-navbar"><div class="container"><a class="navbar-brand" href="/"><strong>625</strong> </a><button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><div class="animated-icon"><span></span><span></span><span></span></div></button><div class="collapse navbar-collapse" id="navbarSupportedContent"><ul class="navbar-nav ml-auto text-center"><li class="nav-item"><a class="nav-link" href="/"><i class="iconfont icon-home-fill"></i> 首页</a></li><li class="nav-item"><a class="nav-link" href="/archives/"><i class="iconfont icon-archive-fill"></i> 归档</a></li><li class="nav-item"><a class="nav-link" href="/categories/"><i class="iconfont icon-category-fill"></i> 分类</a></li><li class="nav-item"><a class="nav-link" href="/tags/"><i class="iconfont icon-tags-fill"></i> 标签</a></li><li class="nav-item"><a class="nav-link" href="/about/"><i class="iconfont icon-user-fill"></i> 关于</a></li><li class="nav-item" id="search-btn"><a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">&nbsp;<i class="iconfont icon-search"></i>&nbsp;</a></li><li class="nav-item" id="color-toggle-btn"><a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a></li></ul></div></div></nav><div id="banner" class="banner" parallax="true" style="background:url(/img/default.png) no-repeat center center;background-size:cover"><div class="full-bg-img"><div class="mask flex-center" style="background-color:rgba(0,0,0,.3)"><div class="banner-text text-center fade-in-up"><div class="h2"><span id="subtitle" data-typed-text="一些常用的linux基础命令"></span></div><div class="mt-3"><span class="post-meta mr-2"><i class="iconfont icon-author" aria-hidden="true"></i> 625 </span><span class="post-meta"><i class="iconfont icon-date-fill" aria-hidden="true"></i> <time datetime="2022-12-10 16:53" pubdate>2022年12月10日 下午</time></span></div><div class="mt-1"><span class="post-meta mr-2"><i class="iconfont icon-chart"></i> 2.6k 字 </span><span class="post-meta mr-2"><i class="iconfont icon-clock-fill"></i> 22 分钟 </span><span id="busuanzi_container_page_pv" style="display:none"><i class="iconfont icon-eye" aria-hidden="true"></i> <span id="busuanzi_value_page_pv"></span> 次</span></div></div></div></div></div></div></header><main><div class="container-fluid nopadding-x"><div class="row nomargin-x"><div class="side-col d-none d-lg-block col-lg-2"></div><div class="col-lg-8 nopadding-x-md"><div class="container nopadding-x-md" id="board-ctn"><div id="board"><article class="post-content mx-auto"><h1 style="display:none">一些常用的linux基础命令</h1><div class="markdown-body"><p>记录一些日常用到的基础命令,防止重复去百度搜索,主要是Centos中,个人记不住的一些命令,ls什么的肯定没有记录</p><span id="more"></span><h4 id="端口"><a href="#端口" class="headerlink" title="端口"></a>端口</h4><ul><li><p>端口占用情况</p><figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">lsof -i <span class="hljs-attr">tcp</span>:<span class="hljs-number">8000</span> </span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">netstat -tunlp |grep <span class="hljs-number">8000</span></span><br></code></pre></td></tr></table></figure></li><li><p>列出所有端口</p><figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">netstat -ntlp</span><br></code></pre></td></tr></table></figure></li><li><p>根据程序名找进程</p><figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs gradle">&gt; ps axu |<span class="hljs-keyword">grep</span> 程序名<span class="hljs-regexp">/端口号/I</span>P等等<br></code></pre></td></tr></table></figure></li><li><p>查询指定端口是否已开</p><figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs dockerfile">&gt; firewall-<span class="hljs-keyword">cmd</span><span class="language-bash"> --query-port=666/tcp</span><br></code></pre></td></tr></table></figure></li><li><p>查看所有开放的端口</p><figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs css">&gt; iptables -t <span class="hljs-attribute">filter</span> -L <span class="hljs-selector-tag">INPUT</span><br><br></code></pre></td></tr></table></figure></li></ul><h4 id="防火墙"><a href="#防火墙" class="headerlink" title="防火墙"></a>防火墙</h4><ul><li><p>查看防火墙状态</p><figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">systemctl status firewalld</span><br></code></pre></td></tr></table></figure></li><li><p>开启防火墙</p><figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">systemctl start firewalld</span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">service firewalld start </span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">##若遇到无法开启,先用：</span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">systemctl unmask firewalld.<span class="hljs-property">service</span> </span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">然后：</span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">systemctl start firewalld.<span class="hljs-property">service</span></span><br></code></pre></td></tr></table></figure></li><li><p>关闭防火墙</p><figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">systemctl stop firewalld</span><br></code></pre></td></tr></table></figure></li><li><p>对外开放端口</p><figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">firewall-cmd --zone=public --add-port=<span class="hljs-number">8080</span>/tcp --permanent</span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript"> iptables -I <span class="hljs-variable constant_">INPUT</span> -p tcp --dport <span class="hljs-number">9150</span> -j <span class="hljs-variable constant_">ACCEPT</span></span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">##或者</span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">sudo vi sysconfig/iptables</span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">##然后</span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">-A <span class="hljs-variable constant_">INPUT</span> -m state --state <span class="hljs-variable constant_">NEW</span> -m tcp -p tcp --dport <span class="hljs-number">9150</span> -j <span class="hljs-variable constant_">ACCEPT</span></span><br></code></pre></td></tr></table></figure></li><li><p>查看对外开放的端口</p><figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs css">&gt; iptables -t <span class="hljs-attribute">filter</span> -L <span class="hljs-selector-tag">INPUT</span><br></code></pre></td></tr></table></figure></li><li><p>重启防火墙</p><figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">firewall-cmd --reload systemctl </span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">restart firewalld.<span class="hljs-property">service</span>；</span><br></code></pre></td></tr></table></figure></li><li><p>关闭指定端口</p><figure class="highlight brainfuck"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs brainfuck">&gt; <span class="hljs-comment">firewall</span><span class="hljs-literal">-</span><span class="hljs-comment">cmd</span> <span class="hljs-literal">--</span><span class="hljs-comment">permanent</span> <span class="hljs-literal">--</span><span class="hljs-comment">remove</span><span class="hljs-literal">-</span><span class="hljs-comment">port=123/tcp</span><br></code></pre></td></tr></table></figure></li></ul><h4 id="查看文件内容"><a href="#查看文件内容" class="headerlink" title="查看文件内容"></a>查看文件内容</h4><ul><li><p>关键词查找</p><figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">##执行的是返回的内容 </span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">grep 正则 文件目录</span><br></code></pre></td></tr></table></figure></li><li><p>关键词查找及随后的目录中搜索字符串</p><figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">grep -R 正则 文件目录</span><br></code></pre></td></tr></table></figure></li></ul><h4 id="jvm相关"><a href="#jvm相关" class="headerlink" title="jvm相关"></a>jvm相关</h4><ul><li><p>hava后台启动</p><figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mipsasm">nohup <span class="hljs-keyword">java </span>-Xmx512m -<span class="hljs-keyword">jar </span>lamp-oauth-server.<span class="hljs-keyword">jar </span>&gt; gateway.log  <span class="hljs-number">2</span>&gt;&amp;<span class="hljs-number">1</span>  &amp;<br><br></code></pre></td></tr></table></figure></li><li><p>查看JAVA进程并输出JVM参数</p></li></ul><figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">jps -v</span><br></code></pre></td></tr></table></figure><ul><li><p>dump堆到文件,format指定输出格式，live指明是活着的对象,file指定文件名</p><figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs gradle">&gt; jmap -<span class="hljs-keyword">dump</span>:live,format=b,<span class="hljs-keyword">file</span>=<span class="hljs-keyword">dump</span>.hprof <span class="hljs-number">28920</span><br></code></pre></td></tr></table></figure></li><li><p>jhat dump文件路径，在线查看对文件</p><figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arduino">屏幕显示“<span class="hljs-built_in">Server</span> is ready.” 的提示后， 用户在浏览器中键入 http:<span class="hljs-comment">//localhost:7000/就可以访问详情</span><br></code></pre></td></tr></table></figure></li><li><p>查看堆的使用情况</p><figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">jmap -heap <span class="hljs-number">28920</span></span><br></code></pre></td></tr></table></figure></li><li><p>查看堆中的对象信息</p><figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">jmap -<span class="hljs-attr">histo</span>:live <span class="hljs-number">28920</span> | more</span><br></code></pre></td></tr></table></figure></li><li><p>查看当前程序的线程快照</p><figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript"> jstack -l <span class="hljs-number">11494</span>|more</span><br></code></pre></td></tr></table></figure></li><li><p>实时查看调整Jvm参数</p><figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">jinfo -flag <span class="hljs-number">11494</span></span><br></code></pre></td></tr></table></figure></li><li><p>查看最近10此的GC的情况，每2秒</p><figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">jstat</span> -gc <span class="hljs-number">1</span>  <span class="hljs-number">2000</span> <span class="hljs-number">10</span> |awk &#x27;&#123;print $<span class="hljs-number">13</span>,$<span class="hljs-number">14</span>,$<span class="hljs-number">15</span>,$<span class="hljs-number">16</span>,$<span class="hljs-number">17</span>&#125;&#x27;<br></code></pre></td></tr></table></figure></li><li><p>查看内存排行前20的数据</p><figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">jmap</span> – histo <span class="hljs-number">1196</span> | head -<span class="hljs-number">20</span><br></code></pre></td></tr></table></figure></li></ul><h4 id="系统信息查看"><a href="#系统信息查看" class="headerlink" title="系统信息查看"></a>系统信息查看</h4><ul><li><p>显示电脑以及操作系统的相关信息</p><figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">uname -a </span><br></code></pre></td></tr></table></figure></li><li><p>正在运行的内核版本</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">&gt; </span><span class="language-bash"><span class="hljs-built_in">cat</span> /proc/version</span><br></code></pre></td></tr></table></figure></li><li><p>发行版本信息</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">&gt; </span><span class="language-bash"><span class="hljs-built_in">cat</span> /etc/issue</span><br></code></pre></td></tr></table></figure></li><li><p>环境变量</p><figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs gradle">&gt; vim <span class="hljs-regexp">/etc/</span>profile<br>&gt; <span class="hljs-keyword">source</span> <span class="hljs-regexp">/etc/</span>profile<br></code></pre></td></tr></table></figure></li><li><p>docker-compose 重新构建容器</p><figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs awk"><span class="hljs-comment"># 构建指定容器</span><br>docker-compose up -d --no-deps --build &lt;service_name&gt;<br><br><span class="hljs-comment"># 构建所有</span><br>docker-compose up --force-recreate --build -d<br>-d                             在后台运行服务容器<br>–no-color                  不使用颜色来区分不同的服务的控制输出<br>–no-deps                  不启动服务所链接的容器<br>–force-recreate         强制重新创建容器，不能与–no-recreate同时使用<br>–no-recreate             如果容器已经存在，则不重新创建，不能与–force-recreate同时使用<br>–no-build                  不自动构建缺失的服务镜像<br>–build                       在启动容器前构建服务镜像<br>–abort-on-container-<span class="hljs-keyword">exit</span>      停止所有容器，如果任何一个容器被停止，不能与-d同时使用<br>-t, –timeout TIMEOUT          停止容器时候的超时（默认为<span class="hljs-number">10</span>秒）<br>–remove-orphans                 删除服务中没有在compose文件中定义的容器<br>–scale SERVICE=NUM          设置服务运行容器的个数，将覆盖在compose中通过scale指定的参数<br></code></pre></td></tr></table></figure></li></ul><h4 id="git相关"><a href="#git相关" class="headerlink" title="git相关"></a>git相关</h4><ul><li>合并不同分支的代码<figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs crmsh"><span class="hljs-comment"># 合并代码</span><br>git merge --squash  lamp/<span class="hljs-keyword">master</span> <span class="hljs-title">--allow-unrelated-histories</span><br><span class="hljs-comment"># 忽略验证</span><br>git commit --no-verify -m “XXX”<br></code></pre></td></tr></table></figure></li></ul><h4 id="maven相关"><a href="#maven相关" class="headerlink" title="maven相关"></a>maven相关</h4><ul><li><p>编译指定模块和他依赖的模块</p><figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs gradle">clean <span class="hljs-keyword">package</span> -T <span class="hljs-number">1</span>C -DskipTests -Dmaven.<span class="hljs-keyword">compile</span>.fork=<span class="hljs-keyword">true</span> -Dmaven.test.skip=<span class="hljs-keyword">true</span> -pl lamp-gateway/lamp-gateway-server -am<br></code></pre></td></tr></table></figure></li><li><p>多线程加速构建多模块</p><figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs gradle">clean <span class="hljs-keyword">package</span> -T <span class="hljs-number">1</span>C -DskipTests -Dmaven.<span class="hljs-keyword">compile</span>.fork=<span class="hljs-keyword">true</span> -Dmaven.test.skip=<span class="hljs-keyword">true</span> -f pom.xml<br></code></pre></td></tr></table></figure></li><li><p>跳过测试，跳过文档</p><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs reasonml">clean install -DskipTests -<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Dmaven</span>.</span></span>test.skip=<span class="hljs-literal">true</span> -<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Dmaven</span>.</span></span>javadoc.skip=<span class="hljs-literal">true</span> -<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Dgpg</span>.</span></span>skip=<span class="hljs-literal">true</span> -<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Dmaven</span>.</span></span>source.skip=<span class="hljs-literal">true</span> -Pdev -f pom.xml<br></code></pre></td></tr></table></figure></li></ul></div><hr><div><div class="post-metas my-3"><div class="post-meta mr-3 d-flex align-items-center"><i class="iconfont icon-category"></i> <span class="category-chains"><span class="category-chain"><a href="/categories/Linux/" class="category-chain-item">Linux</a></span></span></div><div class="post-meta"><i class="iconfont icon-tags"></i> <a href="/tags/%E5%9F%BA%E7%A1%80%E5%91%BD%E4%BB%A4/">#基础命令</a> <a href="/tags/Jvm/">#Jvm</a></div></div><div class="license-box my-3"><div class="license-title"><div>一些常用的linux基础命令</div><div>https://kanchai.club/2022/12/10/Linux命令记录/</div></div><div class="license-meta"><div class="license-meta-item"><div>作者</div><div>625</div></div><div class="license-meta-item license-meta-date"><div>发布于</div><div>2022年12月10日</div></div><div class="license-meta-item"><div>许可协议</div><div><a target="_blank" href="https://creativecommons.org/licenses/by/4.0/"><span class="hint--top hint--rounded" aria-label="BY - 署名"><i class="iconfont icon-by"></i></span></a></div></div></div><div class="license-icon iconfont"></div></div><div class="post-prevnext my-3"><article class="post-prev col-6"><a href="/2022/12/10/Java%E6%A0%B9%E6%8D%AE%E6%96%87%E4%BB%B6%E6%B5%81%E5%87%86%E7%A1%AE%E5%88%A4%E5%AE%9A%E6%96%87%E4%BB%B6%E7%B1%BB%E5%9E%8B/" title="Java根据文件流准确判定文件类型"><i class="iconfont icon-arrowleft"></i> <span class="hidden-mobile">Java根据文件流准确判定文件类型</span> <span class="visible-mobile">上一篇</span></a></article><article class="post-next col-6"><a href="/2022/12/10/GC%E6%97%A5%E5%BF%97%E6%97%B6%E9%97%B4%E5%88%86%E6%9E%90/" title="GC日志时间分析"><span class="hidden-mobile">GC日志时间分析</span> <span class="visible-mobile">下一篇</span> <i class="iconfont icon-arrowright"></i></a></article></div></div><article id="comments" lazyload><div id="giscus" class="giscus"></div><script type="text/javascript">Fluid.utils.loadComments("#giscus",(function(){var t={repo:"stupdit1t/625","repo-id":"MDEwOlJlcG9zaXRvcnkyNDQ3ODMzOTM=",category:"General","category-id":"DIC_kwDODpcZIc4CSeTH","theme-light":"light","theme-dark":"dark",mapping:"pathname","reactions-enabled":1,"emit-metadata":0,"input-position":"top",lang:"zh-CN","//mapping":"title"},e={};for(let i in t){if(!i.startsWith("theme-"))e[i.startsWith("data-")?i:"data-"+i]=t[i]}window.GiscusThemeLight="light",window.GiscusThemeDark="dark",e["data-theme"]="dark"===document.documentElement.getAttribute("data-user-color-scheme")?"dark":"light";for(let t in e){var i=e[t];null!=i&&""!==i||delete e[t]}var a=document.createElement("script");a.setAttribute("src","https://giscus.app/client.js"),a.setAttribute("crossorigin","anonymous");for(let t in e)a.setAttribute(t,e[t]);var n=document.getElementsByTagName("script"),r=n.length>0?n[n.length-1]:document.head||document.documentElement;r.parentNode.insertBefore(a,r.nextSibling)}))</script><noscript>Please enable JavaScript to view the comments</noscript></article></article></div></div></div><div class="side-col d-none d-lg-block col-lg-2"><aside class="sidebar" style="margin-left:-1rem"><div id="toc"><p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p><div class="toc-body" id="toc-body"></div></div></aside></div></div></div><a id="scroll-top-button" aria-label="TOP" href="#" role="button"><i class="iconfont icon-arrowup" aria-hidden="true"></i></a><div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable modal-lg" role="document"><div class="modal-content"><div class="modal-header text-center"><h4 class="modal-title w-100 font-weight-bold">搜索</h4><button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body mx-3"><div class="md-form mb-5"><input type="text" id="local-search-input" class="form-control validate"> <label data-error="x" data-success="v" for="local-search-input">关键词</label></div><div class="list-group" id="local-search-result"></div></div></div></div></div></main><footer><div class="footer-inner"><div class="footer-content"><a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/stupdit1t" target="_blank" rel="nofollow noopener"><span>625</span></a></div><div class="statistics"><span id="busuanzi_container_site_pv" style="display:none">总访问量 <span id="busuanzi_value_site_pv"></span> 次 </span><span id="busuanzi_container_site_uv" style="display:none">总访客数 <span id="busuanzi_value_site_uv"></span> 人</span></div></div></footer><script src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js"></script><link rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css"><script>NProgress.configure({showSpinner:!1,trickleSpeed:100}),NProgress.start(),window.addEventListener("load",(function(){NProgress.done()}))</script><script src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js"></script><script src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js"></script><script src="/js/events.js"></script><script src="/js/plugins.js"></script><script src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js"></script><script>!function(t,e){var i=Fluid.plugins.typing,n=e.getElementById("subtitle");n&&i&&i(n.getAttribute("data-typed-text"))}(window,document)</script><script src="/js/img-lazyload.js"></script><script>Fluid.utils.createScript("https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js",(function(){var t=jQuery("#toc");if(0!==t.length&&window.tocbot){var i=jQuery("#board-ctn").offset().top;window.tocbot.init(Object.assign({tocSelector:"#toc-body",contentSelector:".markdown-body",linkClass:"tocbot-link",activeLinkClass:"tocbot-active-link",listClass:"tocbot-list",isCollapsedClass:"tocbot-is-collapsed",collapsibleClass:"tocbot-is-collapsible",scrollSmooth:!0,includeTitleTags:!0,headingsOffset:-i},CONFIG.toc)),t.find(".toc-list-item").length>0&&t.css("visibility","visible"),Fluid.events.registerRefreshCallback((function(){if("tocbot"in window){tocbot.refresh();var t=jQuery("#toc");if(0===t.length||!tocbot)return;t.find(".toc-list-item").length>0&&t.css("visibility","visible")}}))}}))</script><script src="https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js"></script><script>Fluid.plugins.codeWidget()</script><script>Fluid.utils.createScript("https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js",(function(){window.anchors.options={placement:CONFIG.anchorjs.placement,visible:CONFIG.anchorjs.visible},CONFIG.anchorjs.icon&&(window.anchors.options.icon=CONFIG.anchorjs.icon);var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(window.anchors.options.class="anchorjs-link-left"),window.anchors.add(o.join(", ")),Fluid.events.registerRefreshCallback((function(){if("anchors"in window){anchors.removeAll();var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(anchors.options.class="anchorjs-link-left"),anchors.add(o.join(", "))}}))}))</script><script>Fluid.utils.createScript("https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js",(function(){Fluid.plugins.fancyBox()}))</script><script>Fluid.plugins.imageCaption()</script><script src="/js/local-search.js"></script><script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script src="/js/boot.js"></script><noscript><div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div></noscript></body></html>
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="625">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="记录一些日常用到的基础命令,防止重复去百度搜索,主要是Centos中,个人记不住的一些命令,ls什么的肯定没有记录">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一些常用的linux基础命令">
+<meta property="og:url" content="https://kanchai.club/2022/12/10/Linux%E5%91%BD%E4%BB%A4%E8%AE%B0%E5%BD%95/index.html">
+<meta property="og:site_name" content="625">
+<meta property="og:description" content="记录一些日常用到的基础命令,防止重复去百度搜索,主要是Centos中,个人记不住的一些命令,ls什么的肯定没有记录">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-12-10T08:53:33.522Z">
+<meta property="article:modified_time" content="2022-12-10T08:53:33.522Z">
+<meta property="article:author" content="625">
+<meta property="article:tag" content="基础命令">
+<meta property="article:tag" content="Jvm">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>一些常用的linux基础命令 - 625</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"kanchai.club","root":"/","version":"1.9.3","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":"8b23e0bc706b35d094ee08fd97ebfbed","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+    <!-- Baidu Analytics -->
+    <script async>
+      if (!Fluid.ctx.dnt) {
+        var _hmt = _hmt || [];
+        (function() {
+          var hm = document.createElement("script");
+          hm.src = "https://hm.baidu.com/hm.js?8b23e0bc706b35d094ee08fd97ebfbed";
+          var s = document.getElementsByTagName("script")[0];
+          s.parentNode.insertBefore(hm, s);
+        })();
+      }
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>625</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="一些常用的linux基础命令"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-author" aria-hidden="true"></i>
+        625
+      </span>
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-12-10 16:53" pubdate>
+          2022年12月10日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.6k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          22 分钟
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">一些常用的linux基础命令</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>记录一些日常用到的基础命令,防止重复去百度搜索,主要是Centos中,个人记不住的一些命令,ls什么的肯定没有记录</p>
+<span id="more"></span>
+
+
+<h4 id="端口"><a href="#端口" class="headerlink" title="端口"></a>端口</h4><ul>
+<li><p>端口占用情况</p>
+<figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">lsof -i <span class="hljs-attr">tcp</span>:<span class="hljs-number">8000</span> </span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">netstat -tunlp |grep <span class="hljs-number">8000</span></span><br></code></pre></td></tr></table></figure></li>
+<li><p>列出所有端口</p>
+<figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">netstat -ntlp</span><br></code></pre></td></tr></table></figure></li>
+<li><p>根据程序名找进程</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs gradle">&gt; ps axu |<span class="hljs-keyword">grep</span> 程序名<span class="hljs-regexp">/端口号/I</span>P等等<br></code></pre></td></tr></table></figure></li>
+<li><p>查询指定端口是否已开</p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs dockerfile">&gt; firewall-<span class="hljs-keyword">cmd</span><span class="language-bash"> --query-port=666/tcp</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p>查看所有开放的端口</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs css">&gt; iptables -t <span class="hljs-attribute">filter</span> -L <span class="hljs-selector-tag">INPUT</span><br><br></code></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="防火墙"><a href="#防火墙" class="headerlink" title="防火墙"></a>防火墙</h4><ul>
+<li><p>查看防火墙状态</p>
+<figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">systemctl status firewalld</span><br></code></pre></td></tr></table></figure></li>
+<li><p>开启防火墙</p>
+<figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">systemctl start firewalld</span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">service firewalld start </span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">##若遇到无法开启,先用：</span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">systemctl unmask firewalld.<span class="hljs-property">service</span> </span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">然后：</span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">systemctl start firewalld.<span class="hljs-property">service</span></span><br></code></pre></td></tr></table></figure></li>
+<li><p>关闭防火墙</p>
+<figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">systemctl stop firewalld</span><br></code></pre></td></tr></table></figure></li>
+<li><p>对外开放端口</p>
+<figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">firewall-cmd --zone=public --add-port=<span class="hljs-number">8080</span>/tcp --permanent</span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript"> iptables -I <span class="hljs-variable constant_">INPUT</span> -p tcp --dport <span class="hljs-number">9150</span> -j <span class="hljs-variable constant_">ACCEPT</span></span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">##或者</span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">sudo vi sysconfig/iptables</span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">##然后</span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">-A <span class="hljs-variable constant_">INPUT</span> -m state --state <span class="hljs-variable constant_">NEW</span> -m tcp -p tcp --dport <span class="hljs-number">9150</span> -j <span class="hljs-variable constant_">ACCEPT</span></span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p>查看对外开放的端口</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs css">&gt; iptables -t <span class="hljs-attribute">filter</span> -L <span class="hljs-selector-tag">INPUT</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p>重启防火墙</p>
+<figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">firewall-cmd --reload systemctl </span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">restart firewalld.<span class="hljs-property">service</span>；</span><br></code></pre></td></tr></table></figure></li>
+<li><p>关闭指定端口</p>
+<figure class="highlight brainfuck"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs brainfuck">&gt; <span class="hljs-comment">firewall</span><span class="hljs-literal">-</span><span class="hljs-comment">cmd</span> <span class="hljs-literal">--</span><span class="hljs-comment">permanent</span> <span class="hljs-literal">--</span><span class="hljs-comment">remove</span><span class="hljs-literal">-</span><span class="hljs-comment">port=123/tcp</span><br></code></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="查看文件内容"><a href="#查看文件内容" class="headerlink" title="查看文件内容"></a>查看文件内容</h4><ul>
+<li><p>关键词查找</p>
+<figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">##执行的是返回的内容 </span><br><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">grep 正则 文件目录</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p>关键词查找及随后的目录中搜索字符串</p>
+<figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">grep -R 正则 文件目录</span><br></code></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="jvm相关"><a href="#jvm相关" class="headerlink" title="jvm相关"></a>jvm相关</h4><ul>
+<li><p>hava后台启动</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mipsasm">nohup <span class="hljs-keyword">java </span>-Xmx512m -<span class="hljs-keyword">jar </span>lamp-oauth-server.<span class="hljs-keyword">jar </span>&gt; gateway.log  <span class="hljs-number">2</span>&gt;&amp;<span class="hljs-number">1</span>  &amp;<br><br></code></pre></td></tr></table></figure>
+</li>
+<li><p>查看JAVA进程并输出JVM参数</p>
+</li>
+</ul>
+<figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">jps -v</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><p>dump堆到文件,format指定输出格式，live指明是活着的对象,file指定文件名</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs gradle">&gt; jmap -<span class="hljs-keyword">dump</span>:live,format=b,<span class="hljs-keyword">file</span>=<span class="hljs-keyword">dump</span>.hprof <span class="hljs-number">28920</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p>jhat dump文件路径，在线查看对文件</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arduino">屏幕显示“<span class="hljs-built_in">Server</span> is ready.” 的提示后， 用户在浏览器中键入 http:<span class="hljs-comment">//localhost:7000/就可以访问详情</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p>查看堆的使用情况</p>
+<figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">jmap -heap <span class="hljs-number">28920</span></span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p>查看堆中的对象信息</p>
+<figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">jmap -<span class="hljs-attr">histo</span>:live <span class="hljs-number">28920</span> | more</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p>查看当前程序的线程快照</p>
+<figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript"> jstack -l <span class="hljs-number">11494</span>|more</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p>实时查看调整Jvm参数</p>
+<figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">jinfo -flag <span class="hljs-number">11494</span></span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p>查看最近10此的GC的情况，每2秒</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">jstat</span> -gc <span class="hljs-number">1</span>  <span class="hljs-number">2000</span> <span class="hljs-number">10</span> |awk &#x27;&#123;print $<span class="hljs-number">13</span>,$<span class="hljs-number">14</span>,$<span class="hljs-number">15</span>,$<span class="hljs-number">16</span>,$<span class="hljs-number">17</span>&#125;&#x27;<br></code></pre></td></tr></table></figure>
+</li>
+<li><p>查看内存排行前20的数据</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">jmap</span> – histo <span class="hljs-number">1196</span> | head -<span class="hljs-number">20</span><br></code></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="系统信息查看"><a href="#系统信息查看" class="headerlink" title="系统信息查看"></a>系统信息查看</h4><ul>
+<li><p>显示电脑以及操作系统的相关信息</p>
+<figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs node-repl"><span class="hljs-meta prompt_">&gt;</span> <span class="language-javascript">uname -a </span><br></code></pre></td></tr></table></figure></li>
+<li><p>正在运行的内核版本</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">&gt; </span><span class="language-bash"><span class="hljs-built_in">cat</span> /proc/version</span><br></code></pre></td></tr></table></figure></li>
+<li><p>发行版本信息</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">&gt; </span><span class="language-bash"><span class="hljs-built_in">cat</span> /etc/issue</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p>环境变量</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs gradle">&gt; vim <span class="hljs-regexp">/etc/</span>profile<br>&gt; <span class="hljs-keyword">source</span> <span class="hljs-regexp">/etc/</span>profile<br></code></pre></td></tr></table></figure>
+</li>
+<li><p>docker-compose 重新构建容器</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs awk"><span class="hljs-comment"># 构建指定容器</span><br>docker-compose up -d --no-deps --build &lt;service_name&gt;<br><br><span class="hljs-comment"># 构建所有</span><br>docker-compose up --force-recreate --build -d<br>-d                             在后台运行服务容器<br>–no-color                  不使用颜色来区分不同的服务的控制输出<br>–no-deps                  不启动服务所链接的容器<br>–force-recreate         强制重新创建容器，不能与–no-recreate同时使用<br>–no-recreate             如果容器已经存在，则不重新创建，不能与–force-recreate同时使用<br>–no-build                  不自动构建缺失的服务镜像<br>–build                       在启动容器前构建服务镜像<br>–abort-on-container-<span class="hljs-keyword">exit</span>      停止所有容器，如果任何一个容器被停止，不能与-d同时使用<br>-t, –timeout TIMEOUT          停止容器时候的超时（默认为<span class="hljs-number">10</span>秒）<br>–remove-orphans                 删除服务中没有在compose文件中定义的容器<br>–scale SERVICE=NUM          设置服务运行容器的个数，将覆盖在compose中通过scale指定的参数<br></code></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="git相关"><a href="#git相关" class="headerlink" title="git相关"></a>git相关</h4><ul>
+<li>合并不同分支的代码<figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs crmsh"><span class="hljs-comment"># 合并代码</span><br>git merge --squash  lamp/<span class="hljs-keyword">master</span> <span class="hljs-title">--allow-unrelated-histories</span><br><span class="hljs-comment"># 忽略验证</span><br>git commit --no-verify -m “XXX”<br></code></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="maven相关"><a href="#maven相关" class="headerlink" title="maven相关"></a>maven相关</h4><ul>
+<li><p>编译指定模块和他依赖的模块</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs gradle">clean <span class="hljs-keyword">package</span> -T <span class="hljs-number">1</span>C -DskipTests -Dmaven.<span class="hljs-keyword">compile</span>.fork=<span class="hljs-keyword">true</span> -Dmaven.test.skip=<span class="hljs-keyword">true</span> -pl lamp-gateway/lamp-gateway-server -am<br></code></pre></td></tr></table></figure></li>
+<li><p>多线程加速构建多模块</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs gradle">clean <span class="hljs-keyword">package</span> -T <span class="hljs-number">1</span>C -DskipTests -Dmaven.<span class="hljs-keyword">compile</span>.fork=<span class="hljs-keyword">true</span> -Dmaven.test.skip=<span class="hljs-keyword">true</span> -f pom.xml<br></code></pre></td></tr></table></figure>
+</li>
+<li><p>跳过测试，跳过文档</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs reasonml">clean install -DskipTests -<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Dmaven</span>.</span></span>test.skip=<span class="hljs-literal">true</span> -<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Dmaven</span>.</span></span>javadoc.skip=<span class="hljs-literal">true</span> -<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Dgpg</span>.</span></span>skip=<span class="hljs-literal">true</span> -<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Dmaven</span>.</span></span>source.skip=<span class="hljs-literal">true</span> -Pdev -f pom.xml<br></code></pre></td></tr></table></figure></li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Linux/" class="category-chain-item">Linux</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E5%9F%BA%E7%A1%80%E5%91%BD%E4%BB%A4/">#基础命令</a>
+      
+        <a href="/tags/Jvm/">#Jvm</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>一些常用的linux基础命令</div>
+      <div>https://kanchai.club/2022/12/10/Linux命令记录/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>625</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年12月10日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/12/10/Java%E6%8E%92%E5%88%97%E7%BB%84%E5%90%88%E7%AE%97%E6%B3%95%E5%AE%9E%E7%8E%B0/" title="Java排列组合算法">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Java排列组合算法</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/12/10/GC%E6%97%A5%E5%BF%97%E6%97%B6%E9%97%B4%E5%88%86%E6%9E%90/" title="GC日志时间分析">
+                        <span class="hidden-mobile">GC日志时间分析</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+    <div id="giscus" class="giscus"></div>
+    <script type="text/javascript">
+      Fluid.utils.loadComments('#giscus', function() {
+        var options = {"repo":"stupdit1t/625","repo-id":"MDEwOlJlcG9zaXRvcnkyNDQ3ODMzOTM=","category":"General","category-id":"DIC_kwDODpcZIc4CSeTH","theme-light":"light","theme-dark":"dark","mapping":"pathname","reactions-enabled":1,"emit-metadata":0,"input-position":"top","lang":"zh-CN","//mapping":"title"};
+        var attributes = {};
+        for (let option in options) {
+          if (!option.startsWith('theme-')) {
+            var key = option.startsWith('data-') ? option : 'data-' + option;
+            attributes[key] = options[option];
+          }
+        }
+        var light = 'light';
+        var dark = 'dark';
+        window.GiscusThemeLight = light;
+        window.GiscusThemeDark = dark;
+        attributes['data-theme'] = document.documentElement.getAttribute('data-user-color-scheme') === 'dark' ? dark : light;
+        for (let attribute in attributes) {
+          var value = attributes[attribute];
+          if (value === undefined || value === null || value === '') {
+            delete attributes[attribute];
+          }
+        }
+        var s = document.createElement('script');
+        s.setAttribute('src', 'https://giscus.app/client.js');
+        s.setAttribute('crossorigin', 'anonymous');
+        for (let attribute in attributes) {
+          s.setAttribute(attribute, attributes[attribute]);
+        }
+        var ss = document.getElementsByTagName('script');
+        var e = ss.length > 0 ? ss[ss.length - 1] : document.head || document.documentElement;
+        e.parentNode.insertBefore(s, e.nextSibling);
+      });
+    </script>
+    <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/stupdit1t" target="_blank" rel="nofollow noopener"><span>625</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

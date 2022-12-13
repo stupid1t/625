@@ -1,1 +1,856 @@
-<!DOCTYPE html><html lang="zh-CN" data-default-color-scheme="auto"><head><meta charset="UTF-8"><link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png"><link rel="icon" href="/img/fluid.png"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,shrink-to-fit=no"><meta http-equiv="x-ua-compatible" content="ie=edge"><meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"><meta name="theme-color" content="#2f4154"><meta name="author" content="625"><meta name="keywords" content=""><meta name="description" content="作者：qingmu   qingmu.io&#x2F;2020&#x2F;04&#x2F;08&#x2F;Spring-Boot-Operator-User-Guide&#x2F;  前言在Kubernetes中部署spring boot应用整体上来说是一件比较繁琐的事情，而Spring Boot Operator则能带给你更清爽简单的体验。 Spring Boot Operator基于Kube"><meta property="og:type" content="article"><meta property="og:title" content="springboot应用部署至k8s"><meta property="og:url" content="https://kanchai.club/2022/12/10/springboot%E5%BA%94%E7%94%A8%E9%83%A8%E7%BD%B2%E8%87%B3k8s/index.html"><meta property="og:site_name" content="625"><meta property="og:description" content="作者：qingmu   qingmu.io&#x2F;2020&#x2F;04&#x2F;08&#x2F;Spring-Boot-Operator-User-Guide&#x2F;  前言在Kubernetes中部署spring boot应用整体上来说是一件比较繁琐的事情，而Spring Boot Operator则能带给你更清爽简单的体验。 Spring Boot Operator基于Kube"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="https://www.javazhiyin.com/wp-content/uploads/2020/06/java5-1592962224.png"><meta property="article:published_time" content="2022-12-10T08:53:33.528Z"><meta property="article:modified_time" content="2022-12-10T08:53:33.528Z"><meta property="article:author" content="625"><meta property="article:tag" content="运维"><meta property="article:tag" content="部署"><meta property="article:tag" content="架构"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="https://www.javazhiyin.com/wp-content/uploads/2020/06/java5-1592962224.png"><meta name="referrer" content="no-referrer-when-downgrade"><title>springboot应用部署至k8s - 625</title><link rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css"><link rel="stylesheet" href="/css/main.css"><link id="highlight-css" rel="stylesheet" href="/css/highlight.css"><link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css"><script id="fluid-configs">var Fluid=window.Fluid||{};Fluid.ctx=Object.assign({},Fluid.ctx);var CONFIG={hostname:"kanchai.club",root:"/",version:"1.9.3",typing:{enable:!0,typeSpeed:70,cursorChar:"_",loop:!1,scope:[]},anchorjs:{enable:!0,element:"h1,h2,h3,h4,h5,h6",placement:"left",visible:"hover",icon:""},progressbar:{enable:!0,height_px:3,color:"#29d",options:{showSpinner:!1,trickleSpeed:100}},code_language:{enable:!0,default:"TEXT"},copy_btn:!0,image_caption:{enable:!0},image_zoom:{enable:!0,img_url_replace:["",""]},toc:{enable:!0,placement:"right",headingSelector:"h1,h2,h3,h4,h5,h6",collapseDepth:0},lazyload:{enable:!0,loading_img:"/img/loading.gif",onlypost:!1,offset_factor:2},web_analytics:{enable:!0,follow_dnt:!0,baidu:"8b23e0bc706b35d094ee08fd97ebfbed",google:null,gtag:null,tencent:{sid:null,cid:null},woyaola:null,cnzz:null,leancloud:{app_id:null,app_key:null,server_url:null,path:"window.location.pathname",ignore_local:!1}},search_path:"/local-search.xml"};if(CONFIG.web_analytics.follow_dnt){var dntVal=navigator.doNotTrack||window.doNotTrack||navigator.msDoNotTrack;Fluid.ctx.dnt=dntVal&&(dntVal.startsWith("1")||dntVal.startsWith("yes")||dntVal.startsWith("on"))}</script><script src="/js/utils.js"></script><script src="/js/color-schema.js"></script><script async>if(!Fluid.ctx.dnt){var _hmt=_hmt||[];!function(){var e=document.createElement("script");e.src="https://hm.baidu.com/hm.js?8b23e0bc706b35d094ee08fd97ebfbed";var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)}()}</script><meta name="generator" content="Hexo 6.2.0"></head><body><header><div class="header-inner" style="height:70vh"><nav id="navbar" class="navbar fixed-top navbar-expand-lg navbar-dark scrolling-navbar"><div class="container"><a class="navbar-brand" href="/"><strong>625</strong> </a><button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><div class="animated-icon"><span></span><span></span><span></span></div></button><div class="collapse navbar-collapse" id="navbarSupportedContent"><ul class="navbar-nav ml-auto text-center"><li class="nav-item"><a class="nav-link" href="/"><i class="iconfont icon-home-fill"></i> 首页</a></li><li class="nav-item"><a class="nav-link" href="/archives/"><i class="iconfont icon-archive-fill"></i> 归档</a></li><li class="nav-item"><a class="nav-link" href="/categories/"><i class="iconfont icon-category-fill"></i> 分类</a></li><li class="nav-item"><a class="nav-link" href="/tags/"><i class="iconfont icon-tags-fill"></i> 标签</a></li><li class="nav-item"><a class="nav-link" href="/about/"><i class="iconfont icon-user-fill"></i> 关于</a></li><li class="nav-item" id="search-btn"><a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">&nbsp;<i class="iconfont icon-search"></i>&nbsp;</a></li><li class="nav-item" id="color-toggle-btn"><a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a></li></ul></div></div></nav><div id="banner" class="banner" parallax="true" style="background:url(/img/default.png) no-repeat center center;background-size:cover"><div class="full-bg-img"><div class="mask flex-center" style="background-color:rgba(0,0,0,.3)"><div class="banner-text text-center fade-in-up"><div class="h2"><span id="subtitle" data-typed-text="springboot应用部署至k8s"></span></div><div class="mt-3"><span class="post-meta mr-2"><i class="iconfont icon-author" aria-hidden="true"></i> 625 </span><span class="post-meta"><i class="iconfont icon-date-fill" aria-hidden="true"></i> <time datetime="2022-12-10 16:53" pubdate>2022年12月10日 下午</time></span></div><div class="mt-1"><span class="post-meta mr-2"><i class="iconfont icon-chart"></i> 9.3k 字 </span><span class="post-meta mr-2"><i class="iconfont icon-clock-fill"></i> 78 分钟 </span><span id="busuanzi_container_page_pv" style="display:none"><i class="iconfont icon-eye" aria-hidden="true"></i> <span id="busuanzi_value_page_pv"></span> 次</span></div></div></div></div></div></div></header><main><div class="container-fluid nopadding-x"><div class="row nomargin-x"><div class="side-col d-none d-lg-block col-lg-2"></div><div class="col-lg-8 nopadding-x-md"><div class="container nopadding-x-md" id="board-ctn"><div id="board"><article class="post-content mx-auto"><h1 style="display:none">springboot应用部署至k8s</h1><div class="markdown-body"><blockquote><p>作者：qingmu</p><p>qingmu.io&#x2F;2020&#x2F;04&#x2F;08&#x2F;Spring-Boot-Operator-User-Guide&#x2F;</p></blockquote><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在Kubernetes中部署spring boot应用整体上来说是一件比较繁琐的事情，而Spring Boot Operator则能带给你更清爽简单的体验。</p><p>Spring Boot Operator基于Kubernetes的custom resource definitions (CRDs)扩展API进行的开发。</p><h2 id="打包Docker镜像"><a href="#打包Docker镜像" class="headerlink" title="打包Docker镜像"></a>打包Docker镜像</h2><p>在讲部署之前我们需要先将我们的SpringBoot应用打包成标准的DockerImage。</p><p>java项目打包镜像用maven&#x2F;gradle插件比较多，我的另一篇文章构建SpringBoot的Docker镜像，这里在介绍一个新的google开源的插件Jib，该插件使用起来比较方便。</p><blockquote><p>注意：jib打包的镜像会导致java应用的pid&#x3D;1，在使用SpringBootOperator进行发布时候，Operator会设置kubernetes的ShareProcessNamespace参数为true（v1.10+版本都可使用）来解决该问题。</p></blockquote><p>下面就来演示一下我们通过<a target="_blank" rel="noopener" href="https://start.spring.io生成一个标准的springboot项目operator-demo,然后使用jib插件进行镜像打包/">https://start.spring.io生成一个标准的SpringBoot项目operator-demo,然后使用jib插件进行镜像打包</a></p><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs stylus">mvn com<span class="hljs-selector-class">.google</span><span class="hljs-selector-class">.cloud</span><span class="hljs-selector-class">.tools</span>:jib-maven-plugin:build <br>-Djib<span class="hljs-selector-class">.to</span><span class="hljs-selector-class">.auth</span>.username=$&#123;&#123; secrets<span class="hljs-selector-class">.MY_USERNAME</span> &#125;&#125; <br>-Djib<span class="hljs-selector-class">.to</span><span class="hljs-selector-class">.auth</span>.password=$&#123;&#123; secrets<span class="hljs-selector-class">.MY_PASSWORD</span> &#125;&#125; <br>-Djib<span class="hljs-selector-class">.container</span>.jvmFlags=<span class="hljs-attr">--add-opens</span>,java.base/sun<span class="hljs-selector-class">.nio</span>.ch=ALL-UNNAMED <br>-Djib<span class="hljs-selector-class">.from</span>.image=freemanliu/oprenjre:<span class="hljs-number">11.0</span>.<span class="hljs-number">5</span> <br>-Dimage=registry<span class="hljs-selector-class">.cn-shanghai</span><span class="hljs-selector-class">.aliyuncs</span>.com/qingmuio/operator-demo/operator-demo:v1.<span class="hljs-number">0.0</span><br></code></pre></td></tr></table></figure><p>执行上面的命令之后我们将得到一个标准的docker镜像，该镜像会被推送到远程仓库。</p><h2 id="Operator快速体验"><a href="#Operator快速体验" class="headerlink" title="Operator快速体验"></a>Operator快速体验</h2><p>完成了镜像的构建之后,我们紧接着来安装我们的Operator到kubernetes集群，当然了首先你需要一套集群，可以参考我之前一篇文章部署高可用kubernetes，虽然版本比较老,但是新版本其实也差不多的一个思路。</p><blockquote><p><a target="_blank" rel="noopener" href="https://qingmu.io/2019/05/17/Deploy-a-highly-available-cluster-with-kubeadm/">https://qingmu.io/2019/05/17/Deploy-a-highly-available-cluster-with-kubeadm/</a></p></blockquote><h3 id="快速安装"><a href="#快速安装" class="headerlink" title="快速安装"></a>快速安装</h3><p>此处快速安装只是为了快速体验demo</p><figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk">kubectl apply -f https:<span class="hljs-regexp">//</span>raw.githubusercontent.com<span class="hljs-regexp">/goudai/</span>spring-boot-operator<span class="hljs-regexp">/master/m</span>anifests/deployment.yaml<br></code></pre></td></tr></table></figure><p>apply成功之后控制台输出</p><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs stylus">namespace/spring-boot-operator-system created<br>customresourcedefinition<span class="hljs-selector-class">.apiextensions</span><span class="hljs-selector-class">.k8s</span>.io/springbootapplications<span class="hljs-selector-class">.springboot</span><span class="hljs-selector-class">.qingmu</span><span class="hljs-selector-class">.io</span> created<br>role<span class="hljs-selector-class">.rbac</span><span class="hljs-selector-class">.authorization</span><span class="hljs-selector-class">.k8s</span>.io/spring-boot-operator-leader-election-role created<br>clusterrole<span class="hljs-selector-class">.rbac</span><span class="hljs-selector-class">.authorization</span><span class="hljs-selector-class">.k8s</span>.io/spring-boot-operator-manager-role created<br>clusterrole<span class="hljs-selector-class">.rbac</span><span class="hljs-selector-class">.authorization</span><span class="hljs-selector-class">.k8s</span>.io/spring-boot-operator-proxy-role created<br>clusterrole<span class="hljs-selector-class">.rbac</span><span class="hljs-selector-class">.authorization</span><span class="hljs-selector-class">.k8s</span>.io/spring-boot-operator-metrics-reader created<br>rolebinding<span class="hljs-selector-class">.rbac</span><span class="hljs-selector-class">.authorization</span><span class="hljs-selector-class">.k8s</span>.io/spring-boot-operator-leader-election-rolebinding created<br>clusterrolebinding<span class="hljs-selector-class">.rbac</span><span class="hljs-selector-class">.authorization</span><span class="hljs-selector-class">.k8s</span>.io/spring-boot-operator-manager-rolebinding created<br>clusterrolebinding<span class="hljs-selector-class">.rbac</span><span class="hljs-selector-class">.authorization</span><span class="hljs-selector-class">.k8s</span>.io/spring-boot-operator-proxy-rolebinding created<br>service/spring-boot-operator-controller-manager-metrics-service created<br>deployment.apps/spring-boot-operator-controller-manager created<br></code></pre></td></tr></table></figure><p>稍等片刻查看是否已经安装成功</p><figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs pgsql">kubectl  <span class="hljs-keyword">get</span> po -n spring-boot-<span class="hljs-keyword">operator</span>-<span class="hljs-keyword">system</span><br></code></pre></td></tr></table></figure><p>成功如下输出</p><figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">NAME</span>                                                       READY   STATUS    RESTARTS   AGEspring-boot-operator-controller-manager-<span class="hljs-number">7</span>f498596bb-wcwtn   <span class="hljs-number">2</span>/<span class="hljs-number">2</span>     Running   <span class="hljs-number">0</span>          <span class="hljs-number">2</span>m15s<br></code></pre></td></tr></table></figure><h3 id="部署OperatorDemo应用"><a href="#部署OperatorDemo应用" class="headerlink" title="部署OperatorDemo应用"></a>部署OperatorDemo应用</h3><p>完成了Operator的部署之后，我们来部署我们第一个应用，这里我们就发布上面我们编写的springboot应用opreator-demo。</p><p>首先我们需要先编写一个Spring Boot Application 的CRD部署yaml，如下</p><figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs dts"><span class="hljs-meta"># Demo.yaml</span><br><span class="hljs-symbol">apiVersion:</span> springboot.qingmu.io/v1alpha1<br><span class="hljs-symbol">kind:</span> SpringBootApplication<br><span class="hljs-symbol">metadata:</span><br><span class="hljs-symbol">  name:</span> operator-demo <br><span class="hljs-symbol">spec:</span><br><span class="hljs-symbol">  springBoot:</span><br><span class="hljs-symbol">    version:</span> v1<span class="hljs-number">.0</span><span class="hljs-number">.0</span><br><span class="hljs-meta">#    image: registry.cn-shanghai.aliyuncs.com/qingmuio/operator-demo/operator-demo:v1.0.0</span><br></code></pre></td></tr></table></figure><p>细心的同学可能发现了，为啥连Image都没有？这怎么发布，就name，version，就能完成发布？是的没错！就能完成发布，后面我讲详细讲到他是如何完成的。</p><p>接着我们apply一下</p><figure class="highlight coq"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs coq">kubectl <span class="hljs-built_in">apply</span> -f Demo.yaml<br></code></pre></td></tr></table></figure><p>看到console输出</p><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs stylus">springbootapplication<span class="hljs-selector-class">.springboot</span><span class="hljs-selector-class">.qingmu</span>.io/operator-demo created<br></code></pre></td></tr></table></figure><h3 id="验证"><a href="#验证" class="headerlink" title="验证"></a>验证</h3><p>表示创建成功了，接着我们来看下我们部署的第一个应用，这里我们直接用上面的yaml中的name过滤即可。</p><p>查看pod</p><figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs dart">~# kubectl  <span class="hljs-keyword">get</span> po | grep <span class="hljs-keyword">operator</span>-demo<br><span class="hljs-keyword">operator</span>-demo<span class="hljs-number">-7574</span>f4789c-mg58m             <span class="hljs-number">1</span>/<span class="hljs-number">1</span>     Running   <span class="hljs-number">0</span>          <span class="hljs-number">76</span>s<br><span class="hljs-keyword">operator</span>-demo<span class="hljs-number">-7574</span>f4789c-ssr8v             <span class="hljs-number">1</span>/<span class="hljs-number">1</span>     Running   <span class="hljs-number">0</span>          <span class="hljs-number">76</span>s<br><span class="hljs-keyword">operator</span>-demo<span class="hljs-number">-7574</span>f4789c-sznww             <span class="hljs-number">1</span>/<span class="hljs-number">1</span>     Running   <span class="hljs-number">0</span>          <span class="hljs-number">76</span>s<br></code></pre></td></tr></table></figure><p>查看下我们的pid不等于1的设置是否生效,根据下面的结果可以看到通过设置ShareProcessNamespace该参数我们可以在Kubernetes层面来解决这个pid&#x3D;1的问题。</p><figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">kubectl</span> exec -it operator-demo-<span class="hljs-number">7574</span>f4789c-mg58m bash<br><span class="hljs-attribute">bash</span>-<span class="hljs-number">5</span>.<span class="hljs-number">0</span># ps -ef<br><span class="hljs-attribute">UID</span>        PID  PPID  C STIME TTY          TIME CMD<br><span class="hljs-attribute">root</span>         <span class="hljs-number">1</span>     <span class="hljs-number">0</span>  <span class="hljs-number">0</span> <span class="hljs-number">02</span>:<span class="hljs-number">06</span> ?        <span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span> /pause<br><span class="hljs-attribute">root</span>         <span class="hljs-number">6</span>     <span class="hljs-number">0</span> <span class="hljs-number">26</span> <span class="hljs-number">02</span>:<span class="hljs-number">06</span> ?        <span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">09</span> java --add-opens java.base/sun.nio.ch=<span class="hljs-literal">ALL</span>-UNNAMED -cp /app/resources:/app/classes:/app/libs/* io.qingmu.operator.operatordemo.Oper...<br><span class="hljs-attribute">root</span>        <span class="hljs-number">38</span>     <span class="hljs-number">0</span>  <span class="hljs-number">0</span> <span class="hljs-number">02</span>:<span class="hljs-number">07</span> pts/<span class="hljs-number">0</span>    <span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span> bash<br><span class="hljs-attribute">root</span>        <span class="hljs-number">44</span>    <span class="hljs-number">38</span>  <span class="hljs-number">0</span> <span class="hljs-number">02</span>:<span class="hljs-number">07</span> pts/<span class="hljs-number">0</span>    <span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span> ps -ef<br></code></pre></td></tr></table></figure><p>查看svc</p><figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs pgsql">~# kubectl  <span class="hljs-keyword">get</span> svc | grep <span class="hljs-keyword">operator</span>-demo<br><span class="hljs-keyword">operator</span>-demo             ClusterIP   <span class="hljs-number">10.101</span><span class="hljs-number">.128</span><span class="hljs-number">.6</span>     &lt;<span class="hljs-keyword">none</span>&gt;        <span class="hljs-number">8080</span>/TCP            <span class="hljs-number">2</span>m52s<br></code></pre></td></tr></table></figure><p>我们来访问一下试试。</p><figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">root</span>@server1:~# curl -i http://<span class="hljs-number">10.101.128.6:8080</span><br><span class="hljs-attribute">HTTP</span>/<span class="hljs-number">1</span>.<span class="hljs-number">1</span> <span class="hljs-number">200</span> <br><span class="hljs-attribute">Content</span>-Type: text/plain;charset=UTF-<span class="hljs-number">8</span><br><span class="hljs-attribute">Content</span>-Length: <span class="hljs-number">9</span><br><span class="hljs-attribute">Date</span>: Wed, <span class="hljs-number">08</span> Apr <span class="hljs-number">2020</span> <span class="hljs-number">08</span>:<span class="hljs-number">45</span>:<span class="hljs-number">46</span> GMT<br><br><span class="hljs-attribute">hello</span> !!!<br></code></pre></td></tr></table></figure><p>我们来试着缩减他的副本数到1个</p><p>编辑我们的Demo.yaml，加入一个新的属性replicas</p><figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs dts"><span class="hljs-meta"># Demo.yaml</span><br><span class="hljs-symbol">apiVersion:</span> springboot.qingmu.io/v1alpha1<br><span class="hljs-symbol">kind:</span> SpringBootApplication<br><span class="hljs-symbol">metadata:</span><br><span class="hljs-symbol">  name:</span> operator-demo <br><span class="hljs-symbol">spec:</span><br><span class="hljs-symbol">  springBoot:</span><br><span class="hljs-symbol">    version:</span> v1<span class="hljs-number">.0</span><span class="hljs-number">.0</span><br><span class="hljs-symbol">    replicas:</span> <span class="hljs-number">1</span><br></code></pre></td></tr></table></figure><p>应用一下</p><figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs elixir">root<span class="hljs-variable">@server1</span><span class="hljs-symbol">:~</span><span class="hljs-comment"># kubectl apply -f Demo.yaml </span><br>springbootapplication.springboot.qingmu.io/operator-demo configured<br></code></pre></td></tr></table></figure><p>再次查看pod，你会发现我们的pod已经缩放为一个副本了</p><figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs dart">~# kubectl  <span class="hljs-keyword">get</span> po | grep <span class="hljs-keyword">operator</span>-demo<br><span class="hljs-keyword">operator</span>-demo<span class="hljs-number">-7574</span>f4789c-sznww             <span class="hljs-number">1</span>/<span class="hljs-number">1</span>     Running   <span class="hljs-number">0</span>          <span class="hljs-number">8</span>m29s<br></code></pre></td></tr></table></figure><h3 id="清理operator-demo"><a href="#清理operator-demo" class="headerlink" title="清理operator-demo"></a>清理operator-demo</h3><p>要删除该pod 我们只需要执行delete即可</p><figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs applescript">~<span class="hljs-comment"># kubectl delete -f Demo.yaml </span><br>springbootapplication.springboot.qingmu.io <span class="hljs-string">&quot;operator-demo&quot;</span> deleted<br></code></pre></td></tr></table></figure><p>再次查看pod，已经没了</p><figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim">kubectl  <span class="hljs-built_in">get</span> <span class="hljs-keyword">po</span> | <span class="hljs-keyword">grep</span> operator-demo<br></code></pre></td></tr></table></figure><h2 id="部署自己的应用"><a href="#部署自己的应用" class="headerlink" title="部署自己的应用"></a>部署自己的应用</h2><p>部署自己私有仓库的应用需要需要先创建secret(如果已经创建跳过即可)</p><p>创建docker-registry的secret</p><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs routeros">kubectl create  <span class="hljs-built_in"></span><br><span class="hljs-built_in">secret </span>docker-registry aliyun-registry-secret <br><span class="hljs-attribute">--docker-server</span>=registry-vpc.cn-hangzhou.aliyuncs.com <br><span class="hljs-attribute">--docker-username</span>=*** <br><span class="hljs-attribute">--docker-password</span>=*** <br><span class="hljs-attribute">--docker-email</span>=***<br></code></pre></td></tr></table></figure><p>自己应用的crd Yaml</p><figure class="highlight nestedtext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs nestedtext"><span class="hljs-attribute">apiVersion</span><span class="hljs-punctuation">:</span> <span class="hljs-string">springboot.qingmu.io/v1alpha1</span><br><span class="hljs-attribute">kind</span><span class="hljs-punctuation">:</span> <span class="hljs-string">SpringBootApplication</span><br><span class="hljs-attribute">metadata</span><span class="hljs-punctuation">:</span><br>  <span class="hljs-attribute">name</span><span class="hljs-punctuation">:</span> <span class="hljs-string">你的应用的名称</span><br><span class="hljs-attribute">spec</span><span class="hljs-punctuation">:</span><br>  <span class="hljs-attribute">springBoot</span><span class="hljs-punctuation">:</span><br>    <span class="hljs-attribute">version</span><span class="hljs-punctuation">:</span> <span class="hljs-string">v1.0.0</span><br>    <span class="hljs-attribute">replicas</span><span class="hljs-punctuation">:</span> <span class="hljs-string">1 </span><br>    <span class="hljs-attribute">image</span><span class="hljs-punctuation">:</span> <span class="hljs-string">你的image地址</span><br>    <span class="hljs-attribute">imagePullSecrets</span><span class="hljs-punctuation">: </span><br>      <span class="hljs-bullet">-</span> <span class="hljs-string">上面创建的secret</span><br></code></pre></td></tr></table></figure><h2 id="一个完整的Spring-Boot-Application-Yaml"><a href="#一个完整的Spring-Boot-Application-Yaml" class="headerlink" title="一个完整的Spring Boot Application Yaml"></a>一个完整的Spring Boot Application Yaml</h2><p>下面是一个完整的yaml属性结构，大部分属性我们都可以用默认配置的即可。推荐：<a target="_blank" rel="noopener" href="http://mp.weixin.qq.com/s?__biz=MzIyNDU2ODA4OQ==&mid=2247484532&idx=1&sn=1c243934507d79db4f76de8ed0e5727f&chksm=e80db202df7a3b14fe7077b0fe5ec4de4088ce96a2cde16cbac21214956bd6f2e8f51193ee2b&scene=21#wechat_redirect">一百期Java面试题汇总</a></p><p>不设置属性，默认使用Operator中设置的通用值详见后面的自定义安装Operator。</p><figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><code class="hljs dts"><span class="hljs-symbol">apiVersion:</span> springboot.qingmu.io/v1alpha1<br><span class="hljs-symbol">kind:</span> SpringBootApplication<br><span class="hljs-symbol">metadata:</span><br><span class="hljs-symbol">  name:</span> operator-demo<br><span class="hljs-symbol">  namespace:</span> default<br><span class="hljs-symbol">spec:</span><br><span class="hljs-symbol">  springBoot:</span><br>    <span class="hljs-meta"># image 可以不设置，如果不设置默认使用 IMAGE_REPOSITORY+/+mate.name+:+spec.springBoot.version</span><br>    <span class="hljs-meta"># registry.cn-shanghai.aliyuncs.com/qingmuio + / + operator-demo + : + v1.0.0</span><br><span class="hljs-symbol">    image:</span> registry.cn-shanghai.aliyuncs.com<span class="hljs-keyword">/qingmuio/</span>operator-demo:v1<span class="hljs-number">.0</span><span class="hljs-number">.0</span><br><span class="hljs-symbol">    clusterIp:</span> <span class="hljs-string">&quot;&quot;</span> <br><span class="hljs-symbol">    version:</span> v1<span class="hljs-number">.0</span><span class="hljs-number">.0</span> <br><span class="hljs-symbol">    replicas:</span> <span class="hljs-number">1</span> <br><span class="hljs-symbol">    resource:</span><br><span class="hljs-symbol">      cpu:</span><br><span class="hljs-symbol">        request:</span> <span class="hljs-number">50</span>m<br><span class="hljs-symbol">        limit:</span> <span class="hljs-string">&quot;&quot;</span> <br><span class="hljs-symbol">      memory:</span><br><span class="hljs-symbol">        request:</span> <span class="hljs-number">1</span>Gi<br><span class="hljs-symbol">        limit:</span> <span class="hljs-number">1</span>Gi <br><span class="hljs-symbol">    path:</span><br><span class="hljs-symbol">      liveness:</span> <span class="hljs-keyword">/actuator/</span>health <br><span class="hljs-symbol">      readiness:</span> <span class="hljs-keyword">/actuator/</span>health <br><span class="hljs-symbol">      hostLog:</span> <span class="hljs-keyword">/var/</span>applog <br><span class="hljs-symbol">      shutdown:</span> <span class="hljs-keyword">/spring/</span>shutdown <br><span class="hljs-symbol">    imagePullSecrets:</span> <br>      - aliyun-docker-registry-secret<br><span class="hljs-symbol">    env:</span> <br>      - name: EUREKA_SERVERS<br><span class="hljs-symbol">        value:</span> http:<span class="hljs-comment">//eureka1:8761/eureka/,http://eureka2:8761/eureka/,http://eureka3:8761/eureka/</span><br><span class="hljs-symbol">    nodeAffinity:</span> <br><span class="hljs-symbol">      key:</span> <span class="hljs-string">&quot;failure-domain.beta.kubernetes.io/zone&quot;</span><br><span class="hljs-symbol">      operator:</span> <span class="hljs-string">&quot;In&quot;</span><br><span class="hljs-symbol">      values:</span><br>        - <span class="hljs-string">&quot;cn-i&quot;</span><br>        - <span class="hljs-string">&quot;cn-h&quot;</span><br>        - <span class="hljs-string">&quot;cn-g&quot;</span><br></code></pre></td></tr></table></figure><h3 id="优雅停机的路径"><a href="#优雅停机的路径" class="headerlink" title="优雅停机的路径"></a>优雅停机的路径</h3><p>由于优雅停机默认是关闭的并且并不支持Get请求所以我们需要开启和搭个桥</p><p>首先在application.yml中启用</p><figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs dts"><span class="hljs-symbol">management:</span><br><span class="hljs-symbol">  endpoints:</span><br><span class="hljs-symbol">    web:</span><br><span class="hljs-symbol">      exposure:</span><br><span class="hljs-symbol">        include:</span> <span class="hljs-string">&quot;*&quot;</span><br><span class="hljs-symbol">  endpoint:</span><br><span class="hljs-symbol">    shutdown:</span><br><span class="hljs-symbol">      enabled:</span> true<br></code></pre></td></tr></table></figure><p>然后桥接一个Get方法</p><figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs typescript"><span class="hljs-meta">@RestController</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">ShutdownController</span> &#123;<br>    <span class="hljs-meta">@Autowired</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-title class_">ShutdownEndpoint</span> shutdownEndpoint;<br><br>    <span class="hljs-meta">@GetMapping</span>(<span class="hljs-string">&quot;/spring/shutdown&quot;</span>)<br>    <span class="hljs-keyword">public</span> <span class="hljs-title class_">Map</span>&lt;<span class="hljs-title class_">String</span>, <span class="hljs-title class_">String</span>&gt; <span class="hljs-title function_">shutdown</span>(<span class="hljs-params">HttpServletRequest request</span>) &#123;<br>        <span class="hljs-keyword">return</span> shutdownEndpoint.<span class="hljs-title function_">shutdown</span>();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure><h3 id="node亲和的使用"><a href="#node亲和的使用" class="headerlink" title="node亲和的使用"></a>node亲和的使用</h3><p>举一个列子 我们有一个springboot应用 user-service 希望他能分布到3个可用区的6个节点上:</p><p>首先我们把机器划分多个可用区</p><figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs crmsh">cn-i区(<span class="hljs-keyword">node</span><span class="hljs-title">-i1</span>,<span class="hljs-keyword">node</span><span class="hljs-title">-i02</span>)<br>cn-h区(<span class="hljs-keyword">node</span><span class="hljs-title">-g1</span>,<span class="hljs-keyword">node</span><span class="hljs-title">-g02</span>)<br>cn-g区(<span class="hljs-keyword">node</span><span class="hljs-title">-h1</span>,<span class="hljs-keyword">node</span><span class="hljs-title">-h02</span>)<br></code></pre></td></tr></table></figure><p>现在我们有三个可以区 每个区有2台workload，一共6台。然后我们需要给这些机器分别打上label。</p><p>将全部的i区机器标注为cn-i</p><figure class="highlight maxima"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs maxima">kubectl <span class="hljs-built_in">label</span> node node-<span class="hljs-built_in">i1</span> failure-<span class="hljs-built_in">domain</span>.<span class="hljs-built_in">beta</span>.kubernetes.io/zone=cn-i<br>kubectl <span class="hljs-built_in">label</span> node node-i2 failure-<span class="hljs-built_in">domain</span>.<span class="hljs-built_in">beta</span>.kubernetes.io/zone=cn-i<br></code></pre></td></tr></table></figure><p>同理将h区的标注为h，g区同理</p><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs stylus">kubectl <span class="hljs-selector-tag">label</span> node node-<span class="hljs-selector-tag">h1</span> failure-domain<span class="hljs-selector-class">.beta</span><span class="hljs-selector-class">.kubernetes</span>.io/zone=cn-<span class="hljs-selector-tag">i</span><br>kubectl <span class="hljs-selector-tag">label</span> node node-ih2 failure-domain<span class="hljs-selector-class">.beta</span><span class="hljs-selector-class">.kubernetes</span>.io/zone=cn-i<br></code></pre></td></tr></table></figure><p>现在准备工作我们就绪了，现在我们来设置让它达到我们的调度效果，像如下编写即可。</p><figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs dts"><span class="hljs-symbol">spec:</span><br><span class="hljs-symbol">  springBoot:</span><br><span class="hljs-symbol">    nodeAffinity:</span> <span class="hljs-meta">#可以不设置 节点亲和 这里演示的是尽量将pod分散到 i h g 三个可用区，默认设置了pod反亲和</span><br><span class="hljs-symbol">      key:</span> <span class="hljs-string">&quot;failure-domain.beta.kubernetes.io/zone&quot;</span><br><span class="hljs-symbol">      operator:</span> <span class="hljs-string">&quot;In&quot;</span><br><span class="hljs-symbol">      values:</span><br>        - <span class="hljs-string">&quot;cn-i&quot;</span><br>        - <span class="hljs-string">&quot;cn-h&quot;</span><br>        - <span class="hljs-string">&quot;cn-g&quot;</span><br></code></pre></td></tr></table></figure><h2 id="Operator-自定义安装"><a href="#Operator-自定义安装" class="headerlink" title="Operator 自定义安装"></a>Operator 自定义安装</h2><p>上面我们快速的安装了好了，接着我们来讲解下如何自定义安装，以及有哪些自定义的参数，可以个性化的参数我们用环境变量的方式注入。</p><p>下面来修改Deployment完成自己个性化的配置部署，从我提供的部署yaml中拉倒最后，找到name是spring-boot-operator-controller-manager的Deployment，我们将修改它。</p><figure class="highlight nestedtext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><code class="hljs nestedtext"><span class="hljs-attribute">apiVersion</span><span class="hljs-punctuation">:</span> <span class="hljs-string">apps/v1</span><br><span class="hljs-attribute">kind</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Deployment</span><br><span class="hljs-attribute">metadata</span><span class="hljs-punctuation">:</span><br>  <span class="hljs-attribute">labels</span><span class="hljs-punctuation">:</span><br>    <span class="hljs-attribute">control-plane</span><span class="hljs-punctuation">:</span> <span class="hljs-string">controller-manager</span><br>  <span class="hljs-attribute">name</span><span class="hljs-punctuation">:</span> <span class="hljs-string">spring-boot-operator-controller-manager</span><br>  <span class="hljs-attribute">namespace</span><span class="hljs-punctuation">:</span> <span class="hljs-string">spring-boot-operator-system</span><br>.....<br><br>        <span class="hljs-comment">#注意：一下配置针对通用全局的spring boot默认配置，对crd的spring boot生效，这里不配置也可以在部署的yaml中指定</span><br><br>        <span class="hljs-comment"># 私有仓库的地址，比如我的最终打包的镜像地址是 registry.cn-shanghai.aliyuncs.com/qingmuio/operator-demo/operator-demo:v1.0.0</span><br>        <span class="hljs-comment"># 那么配置的值是 registry.cn-shanghai.aliyuncs.com/qingmuio/operator-demo</span><br>        <span class="hljs-comment"># 配置这个值之后，我们我们如果在发布的yaml中不写image，那么使用的image就是 IMAGE_REPOSITORY+&quot;/&quot;+mate.name+spec.springBoot.version</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: IMAGE_REPOSITORY</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">registry.cn-shanghai.aliyuncs.com/qingmuio</span><br>        <span class="hljs-comment"># 请求CPU限制</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: REQUEST_CPU</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">50m</span><br>        <span class="hljs-comment"># 限制最大能用最大CPU java应用可以不用限制，限制不合理会导致启动异常缓慢</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: LIMIT_CPU</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;&quot;</span><br>        <span class="hljs-comment"># 请求内存大小</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: REQUEST_MEMORY</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">500Mi</span><br>        <span class="hljs-comment"># 限制最大内存大小 一般和request一样大即可</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: LIMIT_MEMORY</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">500Mi</span><br>        <span class="hljs-comment"># 就绪检查Path，spring boot actuator 默认Path</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: READINESS_PATH</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">/actuator/health</span><br>        <span class="hljs-comment"># 就绪存活Path，spring boot actuator 默认Path</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: LIVENESS_PATH</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">/actuator/health</span><br>        <span class="hljs-comment"># 就绪存活Path，优雅停机Path</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: SHUTDOWN_PATH</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">/spring/shutdown</span><br>        <span class="hljs-comment"># 复制级 即副本数</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: REPLICAS</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;3&quot;</span><br>        <span class="hljs-comment"># 将日志外挂到主机磁盘Path，默认两者相同</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: HOST_LOG_PATH</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">/var/applog</span><br>        <span class="hljs-comment"># 用于pull 镜像的secrets</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: IMAGE_PULL_SECRETS</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;&quot;</span><br>        <span class="hljs-comment"># 用于pull 镜像的secrets</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: SPRING_BOOT_DEFAULT_PORT</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;8080&quot;</span><br>        <span class="hljs-comment"># node亲和，比如我可以设置pod尽量分散在不同可用区cn-i,cn-g,cn-h区</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: NODE_AFFINITY_KEY</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;&quot;</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: NODE_AFFINITY_OPERATOR</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;&quot;</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: NODE_AFFINITY_VALUES</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;&quot;</span><br>        <span class="hljs-comment"># 全局的环境变量，会追加到每个spring boot的每个pod中，格式 k=v;k1=v2,</span><br>        <span class="hljs-comment"># 如 EUREKA_SERVERS=http://eureka1:8761/eureka/,http://eureka2:8761/eureka/,http://eureka3:8761/eureka/;k=v</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: SPRING_BOOT_ENV</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;&quot;</span><br>        <span class="hljs-attribute">image</span><span class="hljs-punctuation">:</span> <span class="hljs-string">registry.cn-shanghai.aliyuncs.com/qingmuio/spring-boot-operator-controller:latest</span><br></code></pre></td></tr></table></figure><h3 id="自定义安装之后部署"><a href="#自定义安装之后部署" class="headerlink" title="自定义安装之后部署"></a>自定义安装之后部署</h3><p>yaml可以简化为如下。</p><figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs dts"><span class="hljs-symbol">apiVersion:</span> springboot.qingmu.io/v1alpha1<br><span class="hljs-symbol">kind:</span> SpringBootApplication<br><span class="hljs-symbol">metadata:</span><br><span class="hljs-symbol">  name:</span> 你的应用的名称<br><span class="hljs-symbol">spec:</span><br><span class="hljs-symbol">  springBoot:</span><br><span class="hljs-symbol">    version:</span> v1<span class="hljs-number">.0</span><span class="hljs-number">.0</span><br></code></pre></td></tr></table></figure><h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h2><p>环境变量表格</p><p><img src="https://www.javazhiyin.com/wp-content/uploads/2020/06/java5-1592962224.png" srcset="/img/loading.gif" lazyload alt="部署SpringBoot应用到K8S教程" title="部署SpringBoot应用到K8S教程"></p><h2 id="Github仓库"><a href="#Github仓库" class="headerlink" title="Github仓库"></a>Github仓库</h2><blockquote><p>SpringBootOperator: <a target="_blank" rel="noopener" href="https://github.com/goudai/spring-boot-operator">https://github.com/goudai/spring-boot-operator</a></p></blockquote></div><hr><div><div class="post-metas my-3"><div class="post-meta"><i class="iconfont icon-tags"></i> <a href="/tags/%E8%BF%90%E7%BB%B4/">#运维</a> <a href="/tags/%E9%83%A8%E7%BD%B2/">#部署</a> <a href="/tags/%E6%9E%B6%E6%9E%84/">#架构</a></div></div><div class="license-box my-3"><div class="license-title"><div>springboot应用部署至k8s</div><div>https://kanchai.club/2022/12/10/springboot应用部署至k8s/</div></div><div class="license-meta"><div class="license-meta-item"><div>作者</div><div>625</div></div><div class="license-meta-item license-meta-date"><div>发布于</div><div>2022年12月10日</div></div><div class="license-meta-item"><div>许可协议</div><div><a target="_blank" href="https://creativecommons.org/licenses/by/4.0/"><span class="hint--top hint--rounded" aria-label="BY - 署名"><i class="iconfont icon-by"></i></span></a></div></div></div><div class="license-icon iconfont"></div></div><div class="post-prevnext my-3"><article class="post-prev col-6"><a href="/2022/12/10/%E3%80%9063%E6%9C%9F%E3%80%91%E8%B0%88%E8%B0%88MySQL%20%E7%B4%A2%E5%BC%95%EF%BC%8CB+%E6%A0%91%E5%8E%9F%E7%90%86%EF%BC%8C%E4%BB%A5%E5%8F%8A%E5%BB%BA%E7%B4%A2%E5%BC%95%E7%9A%84%E5%87%A0%E5%A4%A7%E5%8E%9F%E5%88%99%EF%BC%88MySQL%E9%9D%A2%E8%AF%95%E7%AC%AC%E5%85%AD%E5%BC%B9%EF%BC%89/" title="【63期】谈谈MySQL 索引，B+树原理，以及建索引的几大原则（MySQL面试第六弹）"><i class="iconfont icon-arrowleft"></i> <span class="hidden-mobile">【63期】谈谈MySQL 索引，B+树原理，以及建索引的几大原则（MySQL面试第六弹）</span> <span class="visible-mobile">上一篇</span></a></article><article class="post-next col-6"><a href="/2022/12/10/springmvc%E5%AE%9E%E7%8E%B0%E5%8F%82%E6%95%B0%E5%A4%84%E7%90%86%EF%BC%8Crsa%E8%A7%A3%E5%AF%86%E6%95%B0%E6%8D%AE/" title="springmvc实现参数处理，rsa解密数据"><span class="hidden-mobile">springmvc实现参数处理，rsa解密数据</span> <span class="visible-mobile">下一篇</span> <i class="iconfont icon-arrowright"></i></a></article></div></div><article id="comments" lazyload><div id="giscus" class="giscus"></div><script type="text/javascript">Fluid.utils.loadComments("#giscus",(function(){var t={repo:"stupdit1t/625","repo-id":"MDEwOlJlcG9zaXRvcnkyNDQ3ODMzOTM=",category:"General","category-id":"DIC_kwDODpcZIc4CSeTH","theme-light":"light","theme-dark":"dark",mapping:"pathname","reactions-enabled":1,"emit-metadata":0,"input-position":"top",lang:"zh-CN","//mapping":"title"},e={};for(let i in t){if(!i.startsWith("theme-"))e[i.startsWith("data-")?i:"data-"+i]=t[i]}window.GiscusThemeLight="light",window.GiscusThemeDark="dark",e["data-theme"]="dark"===document.documentElement.getAttribute("data-user-color-scheme")?"dark":"light";for(let t in e){var i=e[t];null!=i&&""!==i||delete e[t]}var a=document.createElement("script");a.setAttribute("src","https://giscus.app/client.js"),a.setAttribute("crossorigin","anonymous");for(let t in e)a.setAttribute(t,e[t]);var n=document.getElementsByTagName("script"),r=n.length>0?n[n.length-1]:document.head||document.documentElement;r.parentNode.insertBefore(a,r.nextSibling)}))</script><noscript>Please enable JavaScript to view the comments</noscript></article></article></div></div></div><div class="side-col d-none d-lg-block col-lg-2"><aside class="sidebar" style="margin-left:-1rem"><div id="toc"><p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p><div class="toc-body" id="toc-body"></div></div></aside></div></div></div><a id="scroll-top-button" aria-label="TOP" href="#" role="button"><i class="iconfont icon-arrowup" aria-hidden="true"></i></a><div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable modal-lg" role="document"><div class="modal-content"><div class="modal-header text-center"><h4 class="modal-title w-100 font-weight-bold">搜索</h4><button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body mx-3"><div class="md-form mb-5"><input type="text" id="local-search-input" class="form-control validate"> <label data-error="x" data-success="v" for="local-search-input">关键词</label></div><div class="list-group" id="local-search-result"></div></div></div></div></div></main><footer><div class="footer-inner"><div class="footer-content"><a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/stupdit1t" target="_blank" rel="nofollow noopener"><span>625</span></a></div><div class="statistics"><span id="busuanzi_container_site_pv" style="display:none">总访问量 <span id="busuanzi_value_site_pv"></span> 次 </span><span id="busuanzi_container_site_uv" style="display:none">总访客数 <span id="busuanzi_value_site_uv"></span> 人</span></div></div></footer><script src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js"></script><link rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css"><script>NProgress.configure({showSpinner:!1,trickleSpeed:100}),NProgress.start(),window.addEventListener("load",(function(){NProgress.done()}))</script><script src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js"></script><script src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js"></script><script src="/js/events.js"></script><script src="/js/plugins.js"></script><script src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js"></script><script>!function(t,e){var i=Fluid.plugins.typing,n=e.getElementById("subtitle");n&&i&&i(n.getAttribute("data-typed-text"))}(window,document)</script><script src="/js/img-lazyload.js"></script><script>Fluid.utils.createScript("https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js",(function(){var t=jQuery("#toc");if(0!==t.length&&window.tocbot){var i=jQuery("#board-ctn").offset().top;window.tocbot.init(Object.assign({tocSelector:"#toc-body",contentSelector:".markdown-body",linkClass:"tocbot-link",activeLinkClass:"tocbot-active-link",listClass:"tocbot-list",isCollapsedClass:"tocbot-is-collapsed",collapsibleClass:"tocbot-is-collapsible",scrollSmooth:!0,includeTitleTags:!0,headingsOffset:-i},CONFIG.toc)),t.find(".toc-list-item").length>0&&t.css("visibility","visible"),Fluid.events.registerRefreshCallback((function(){if("tocbot"in window){tocbot.refresh();var t=jQuery("#toc");if(0===t.length||!tocbot)return;t.find(".toc-list-item").length>0&&t.css("visibility","visible")}}))}}))</script><script src="https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js"></script><script>Fluid.plugins.codeWidget()</script><script>Fluid.utils.createScript("https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js",(function(){window.anchors.options={placement:CONFIG.anchorjs.placement,visible:CONFIG.anchorjs.visible},CONFIG.anchorjs.icon&&(window.anchors.options.icon=CONFIG.anchorjs.icon);var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(window.anchors.options.class="anchorjs-link-left"),window.anchors.add(o.join(", ")),Fluid.events.registerRefreshCallback((function(){if("anchors"in window){anchors.removeAll();var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(anchors.options.class="anchorjs-link-left"),anchors.add(o.join(", "))}}))}))</script><script>Fluid.utils.createScript("https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js",(function(){Fluid.plugins.fancyBox()}))</script><script>Fluid.plugins.imageCaption()</script><script src="/js/local-search.js"></script><script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script src="/js/boot.js"></script><noscript><div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div></noscript></body></html>
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="625">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="作者：qingmu   qingmu.io&#x2F;2020&#x2F;04&#x2F;08&#x2F;Spring-Boot-Operator-User-Guide&#x2F;  前言在Kubernetes中部署spring boot应用整体上来说是一件比较繁琐的事情，而Spring Boot Operator则能带给你更清爽简单的体验。 Spring Boot Operator基于Kube">
+<meta property="og:type" content="article">
+<meta property="og:title" content="springboot应用部署至k8s">
+<meta property="og:url" content="https://kanchai.club/2022/12/10/springboot%E5%BA%94%E7%94%A8%E9%83%A8%E7%BD%B2%E8%87%B3k8s/index.html">
+<meta property="og:site_name" content="625">
+<meta property="og:description" content="作者：qingmu   qingmu.io&#x2F;2020&#x2F;04&#x2F;08&#x2F;Spring-Boot-Operator-User-Guide&#x2F;  前言在Kubernetes中部署spring boot应用整体上来说是一件比较繁琐的事情，而Spring Boot Operator则能带给你更清爽简单的体验。 Spring Boot Operator基于Kube">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.javazhiyin.com/wp-content/uploads/2020/06/java5-1592962224.png">
+<meta property="article:published_time" content="2022-12-10T08:53:33.528Z">
+<meta property="article:modified_time" content="2022-12-10T08:53:33.528Z">
+<meta property="article:author" content="625">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="部署">
+<meta property="article:tag" content="架构">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://www.javazhiyin.com/wp-content/uploads/2020/06/java5-1592962224.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>springboot应用部署至k8s - 625</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"kanchai.club","root":"/","version":"1.9.3","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":"8b23e0bc706b35d094ee08fd97ebfbed","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+    <!-- Baidu Analytics -->
+    <script async>
+      if (!Fluid.ctx.dnt) {
+        var _hmt = _hmt || [];
+        (function() {
+          var hm = document.createElement("script");
+          hm.src = "https://hm.baidu.com/hm.js?8b23e0bc706b35d094ee08fd97ebfbed";
+          var s = document.getElementsByTagName("script")[0];
+          s.parentNode.insertBefore(hm, s);
+        })();
+      }
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>625</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="springboot应用部署至k8s"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-author" aria-hidden="true"></i>
+        625
+      </span>
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-12-10 16:53" pubdate>
+          2022年12月10日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          9.3k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          78 分钟
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">springboot应用部署至k8s</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>作者：qingmu  </p>
+<p>qingmu.io&#x2F;2020&#x2F;04&#x2F;08&#x2F;Spring-Boot-Operator-User-Guide&#x2F;</p>
+</blockquote>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在Kubernetes中部署spring boot应用整体上来说是一件比较繁琐的事情，而Spring Boot Operator则能带给你更清爽简单的体验。</p>
+<p>Spring Boot Operator基于Kubernetes的custom resource definitions (CRDs)扩展API进行的开发。</p>
+<h2 id="打包Docker镜像"><a href="#打包Docker镜像" class="headerlink" title="打包Docker镜像"></a>打包Docker镜像</h2><p>在讲部署之前我们需要先将我们的SpringBoot应用打包成标准的DockerImage。</p>
+<p>java项目打包镜像用maven&#x2F;gradle插件比较多，我的另一篇文章构建SpringBoot的Docker镜像，这里在介绍一个新的google开源的插件Jib，该插件使用起来比较方便。</p>
+<blockquote>
+<p>注意：jib打包的镜像会导致java应用的pid&#x3D;1，在使用SpringBootOperator进行发布时候，Operator会设置kubernetes的ShareProcessNamespace参数为true（v1.10+版本都可使用）来解决该问题。</p>
+</blockquote>
+<p>下面就来演示一下我们通过<a target="_blank" rel="noopener" href="https://start.spring.io生成一个标准的springboot项目operator-demo,然后使用jib插件进行镜像打包/">https://start.spring.io生成一个标准的SpringBoot项目operator-demo,然后使用jib插件进行镜像打包</a></p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs stylus">mvn com<span class="hljs-selector-class">.google</span><span class="hljs-selector-class">.cloud</span><span class="hljs-selector-class">.tools</span>:jib-maven-plugin:build <br>-Djib<span class="hljs-selector-class">.to</span><span class="hljs-selector-class">.auth</span>.username=$&#123;&#123; secrets<span class="hljs-selector-class">.MY_USERNAME</span> &#125;&#125; <br>-Djib<span class="hljs-selector-class">.to</span><span class="hljs-selector-class">.auth</span>.password=$&#123;&#123; secrets<span class="hljs-selector-class">.MY_PASSWORD</span> &#125;&#125; <br>-Djib<span class="hljs-selector-class">.container</span>.jvmFlags=<span class="hljs-attr">--add-opens</span>,java.base/sun<span class="hljs-selector-class">.nio</span>.ch=ALL-UNNAMED <br>-Djib<span class="hljs-selector-class">.from</span>.image=freemanliu/oprenjre:<span class="hljs-number">11.0</span>.<span class="hljs-number">5</span> <br>-Dimage=registry<span class="hljs-selector-class">.cn-shanghai</span><span class="hljs-selector-class">.aliyuncs</span>.com/qingmuio/operator-demo/operator-demo:v1.<span class="hljs-number">0.0</span><br></code></pre></td></tr></table></figure>
+
+<p>执行上面的命令之后我们将得到一个标准的docker镜像，该镜像会被推送到远程仓库。</p>
+<h2 id="Operator快速体验"><a href="#Operator快速体验" class="headerlink" title="Operator快速体验"></a>Operator快速体验</h2><p>完成了镜像的构建之后,我们紧接着来安装我们的Operator到kubernetes集群，当然了首先你需要一套集群，可以参考我之前一篇文章部署高可用kubernetes，虽然版本比较老,但是新版本其实也差不多的一个思路。</p>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://qingmu.io/2019/05/17/Deploy-a-highly-available-cluster-with-kubeadm/">https://qingmu.io/2019/05/17/Deploy-a-highly-available-cluster-with-kubeadm/</a></p>
+</blockquote>
+<h3 id="快速安装"><a href="#快速安装" class="headerlink" title="快速安装"></a>快速安装</h3><p>此处快速安装只是为了快速体验demo</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk">kubectl apply -f https:<span class="hljs-regexp">//</span>raw.githubusercontent.com<span class="hljs-regexp">/goudai/</span>spring-boot-operator<span class="hljs-regexp">/master/m</span>anifests/deployment.yaml<br></code></pre></td></tr></table></figure>
+
+<p>apply成功之后控制台输出</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs stylus">namespace/spring-boot-operator-system created<br>customresourcedefinition<span class="hljs-selector-class">.apiextensions</span><span class="hljs-selector-class">.k8s</span>.io/springbootapplications<span class="hljs-selector-class">.springboot</span><span class="hljs-selector-class">.qingmu</span><span class="hljs-selector-class">.io</span> created<br>role<span class="hljs-selector-class">.rbac</span><span class="hljs-selector-class">.authorization</span><span class="hljs-selector-class">.k8s</span>.io/spring-boot-operator-leader-election-role created<br>clusterrole<span class="hljs-selector-class">.rbac</span><span class="hljs-selector-class">.authorization</span><span class="hljs-selector-class">.k8s</span>.io/spring-boot-operator-manager-role created<br>clusterrole<span class="hljs-selector-class">.rbac</span><span class="hljs-selector-class">.authorization</span><span class="hljs-selector-class">.k8s</span>.io/spring-boot-operator-proxy-role created<br>clusterrole<span class="hljs-selector-class">.rbac</span><span class="hljs-selector-class">.authorization</span><span class="hljs-selector-class">.k8s</span>.io/spring-boot-operator-metrics-reader created<br>rolebinding<span class="hljs-selector-class">.rbac</span><span class="hljs-selector-class">.authorization</span><span class="hljs-selector-class">.k8s</span>.io/spring-boot-operator-leader-election-rolebinding created<br>clusterrolebinding<span class="hljs-selector-class">.rbac</span><span class="hljs-selector-class">.authorization</span><span class="hljs-selector-class">.k8s</span>.io/spring-boot-operator-manager-rolebinding created<br>clusterrolebinding<span class="hljs-selector-class">.rbac</span><span class="hljs-selector-class">.authorization</span><span class="hljs-selector-class">.k8s</span>.io/spring-boot-operator-proxy-rolebinding created<br>service/spring-boot-operator-controller-manager-metrics-service created<br>deployment.apps/spring-boot-operator-controller-manager created<br></code></pre></td></tr></table></figure>
+
+<p>稍等片刻查看是否已经安装成功</p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs pgsql">kubectl  <span class="hljs-keyword">get</span> po -n spring-boot-<span class="hljs-keyword">operator</span>-<span class="hljs-keyword">system</span><br></code></pre></td></tr></table></figure>
+
+<p>成功如下输出</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">NAME</span>                                                       READY   STATUS    RESTARTS   AGEspring-boot-operator-controller-manager-<span class="hljs-number">7</span>f498596bb-wcwtn   <span class="hljs-number">2</span>/<span class="hljs-number">2</span>     Running   <span class="hljs-number">0</span>          <span class="hljs-number">2</span>m15s<br></code></pre></td></tr></table></figure>
+
+<h3 id="部署OperatorDemo应用"><a href="#部署OperatorDemo应用" class="headerlink" title="部署OperatorDemo应用"></a>部署OperatorDemo应用</h3><p>完成了Operator的部署之后，我们来部署我们第一个应用，这里我们就发布上面我们编写的springboot应用opreator-demo。</p>
+<p>首先我们需要先编写一个Spring Boot Application 的CRD部署yaml，如下</p>
+<figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs dts"><span class="hljs-meta"># Demo.yaml</span><br><span class="hljs-symbol">apiVersion:</span> springboot.qingmu.io/v1alpha1<br><span class="hljs-symbol">kind:</span> SpringBootApplication<br><span class="hljs-symbol">metadata:</span><br><span class="hljs-symbol">  name:</span> operator-demo <br><span class="hljs-symbol">spec:</span><br><span class="hljs-symbol">  springBoot:</span><br><span class="hljs-symbol">    version:</span> v1<span class="hljs-number">.0</span><span class="hljs-number">.0</span><br><span class="hljs-meta">#    image: registry.cn-shanghai.aliyuncs.com/qingmuio/operator-demo/operator-demo:v1.0.0</span><br></code></pre></td></tr></table></figure>
+
+<p>细心的同学可能发现了，为啥连Image都没有？这怎么发布，就name，version，就能完成发布？是的没错！就能完成发布，后面我讲详细讲到他是如何完成的。</p>
+<p>接着我们apply一下</p>
+<figure class="highlight coq"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs coq">kubectl <span class="hljs-built_in">apply</span> -f Demo.yaml<br></code></pre></td></tr></table></figure>
+
+<p>看到console输出</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs stylus">springbootapplication<span class="hljs-selector-class">.springboot</span><span class="hljs-selector-class">.qingmu</span>.io/operator-demo created<br></code></pre></td></tr></table></figure>
+
+<h3 id="验证"><a href="#验证" class="headerlink" title="验证"></a>验证</h3><p>表示创建成功了，接着我们来看下我们部署的第一个应用，这里我们直接用上面的yaml中的name过滤即可。</p>
+<p>查看pod</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs dart">~# kubectl  <span class="hljs-keyword">get</span> po | grep <span class="hljs-keyword">operator</span>-demo<br><span class="hljs-keyword">operator</span>-demo<span class="hljs-number">-7574</span>f4789c-mg58m             <span class="hljs-number">1</span>/<span class="hljs-number">1</span>     Running   <span class="hljs-number">0</span>          <span class="hljs-number">76</span>s<br><span class="hljs-keyword">operator</span>-demo<span class="hljs-number">-7574</span>f4789c-ssr8v             <span class="hljs-number">1</span>/<span class="hljs-number">1</span>     Running   <span class="hljs-number">0</span>          <span class="hljs-number">76</span>s<br><span class="hljs-keyword">operator</span>-demo<span class="hljs-number">-7574</span>f4789c-sznww             <span class="hljs-number">1</span>/<span class="hljs-number">1</span>     Running   <span class="hljs-number">0</span>          <span class="hljs-number">76</span>s<br></code></pre></td></tr></table></figure>
+
+<p>查看下我们的pid不等于1的设置是否生效,根据下面的结果可以看到通过设置ShareProcessNamespace该参数我们可以在Kubernetes层面来解决这个pid&#x3D;1的问题。</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">kubectl</span> exec -it operator-demo-<span class="hljs-number">7574</span>f4789c-mg58m bash<br><span class="hljs-attribute">bash</span>-<span class="hljs-number">5</span>.<span class="hljs-number">0</span># ps -ef<br><span class="hljs-attribute">UID</span>        PID  PPID  C STIME TTY          TIME CMD<br><span class="hljs-attribute">root</span>         <span class="hljs-number">1</span>     <span class="hljs-number">0</span>  <span class="hljs-number">0</span> <span class="hljs-number">02</span>:<span class="hljs-number">06</span> ?        <span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span> /pause<br><span class="hljs-attribute">root</span>         <span class="hljs-number">6</span>     <span class="hljs-number">0</span> <span class="hljs-number">26</span> <span class="hljs-number">02</span>:<span class="hljs-number">06</span> ?        <span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">09</span> java --add-opens java.base/sun.nio.ch=<span class="hljs-literal">ALL</span>-UNNAMED -cp /app/resources:/app/classes:/app/libs/* io.qingmu.operator.operatordemo.Oper...<br><span class="hljs-attribute">root</span>        <span class="hljs-number">38</span>     <span class="hljs-number">0</span>  <span class="hljs-number">0</span> <span class="hljs-number">02</span>:<span class="hljs-number">07</span> pts/<span class="hljs-number">0</span>    <span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span> bash<br><span class="hljs-attribute">root</span>        <span class="hljs-number">44</span>    <span class="hljs-number">38</span>  <span class="hljs-number">0</span> <span class="hljs-number">02</span>:<span class="hljs-number">07</span> pts/<span class="hljs-number">0</span>    <span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span> ps -ef<br></code></pre></td></tr></table></figure>
+
+<p>查看svc</p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs pgsql">~# kubectl  <span class="hljs-keyword">get</span> svc | grep <span class="hljs-keyword">operator</span>-demo<br><span class="hljs-keyword">operator</span>-demo             ClusterIP   <span class="hljs-number">10.101</span><span class="hljs-number">.128</span><span class="hljs-number">.6</span>     &lt;<span class="hljs-keyword">none</span>&gt;        <span class="hljs-number">8080</span>/TCP            <span class="hljs-number">2</span>m52s<br></code></pre></td></tr></table></figure>
+
+<p>我们来访问一下试试。</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">root</span>@server1:~# curl -i http://<span class="hljs-number">10.101.128.6:8080</span><br><span class="hljs-attribute">HTTP</span>/<span class="hljs-number">1</span>.<span class="hljs-number">1</span> <span class="hljs-number">200</span> <br><span class="hljs-attribute">Content</span>-Type: text/plain;charset=UTF-<span class="hljs-number">8</span><br><span class="hljs-attribute">Content</span>-Length: <span class="hljs-number">9</span><br><span class="hljs-attribute">Date</span>: Wed, <span class="hljs-number">08</span> Apr <span class="hljs-number">2020</span> <span class="hljs-number">08</span>:<span class="hljs-number">45</span>:<span class="hljs-number">46</span> GMT<br><br><span class="hljs-attribute">hello</span> !!!<br></code></pre></td></tr></table></figure>
+
+<p>我们来试着缩减他的副本数到1个</p>
+<p>编辑我们的Demo.yaml，加入一个新的属性replicas</p>
+<figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs dts"><span class="hljs-meta"># Demo.yaml</span><br><span class="hljs-symbol">apiVersion:</span> springboot.qingmu.io/v1alpha1<br><span class="hljs-symbol">kind:</span> SpringBootApplication<br><span class="hljs-symbol">metadata:</span><br><span class="hljs-symbol">  name:</span> operator-demo <br><span class="hljs-symbol">spec:</span><br><span class="hljs-symbol">  springBoot:</span><br><span class="hljs-symbol">    version:</span> v1<span class="hljs-number">.0</span><span class="hljs-number">.0</span><br><span class="hljs-symbol">    replicas:</span> <span class="hljs-number">1</span><br></code></pre></td></tr></table></figure>
+
+<p>应用一下</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs elixir">root<span class="hljs-variable">@server1</span><span class="hljs-symbol">:~</span><span class="hljs-comment"># kubectl apply -f Demo.yaml </span><br>springbootapplication.springboot.qingmu.io/operator-demo configured<br></code></pre></td></tr></table></figure>
+
+<p>再次查看pod，你会发现我们的pod已经缩放为一个副本了</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs dart">~# kubectl  <span class="hljs-keyword">get</span> po | grep <span class="hljs-keyword">operator</span>-demo<br><span class="hljs-keyword">operator</span>-demo<span class="hljs-number">-7574</span>f4789c-sznww             <span class="hljs-number">1</span>/<span class="hljs-number">1</span>     Running   <span class="hljs-number">0</span>          <span class="hljs-number">8</span>m29s<br></code></pre></td></tr></table></figure>
+
+<h3 id="清理operator-demo"><a href="#清理operator-demo" class="headerlink" title="清理operator-demo"></a>清理operator-demo</h3><p>要删除该pod 我们只需要执行delete即可</p>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs applescript">~<span class="hljs-comment"># kubectl delete -f Demo.yaml </span><br>springbootapplication.springboot.qingmu.io <span class="hljs-string">&quot;operator-demo&quot;</span> deleted<br></code></pre></td></tr></table></figure>
+
+<p>再次查看pod，已经没了</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim">kubectl  <span class="hljs-built_in">get</span> <span class="hljs-keyword">po</span> | <span class="hljs-keyword">grep</span> operator-demo<br></code></pre></td></tr></table></figure>
+
+<h2 id="部署自己的应用"><a href="#部署自己的应用" class="headerlink" title="部署自己的应用"></a>部署自己的应用</h2><p>部署自己私有仓库的应用需要需要先创建secret(如果已经创建跳过即可)</p>
+<p>创建docker-registry的secret</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs routeros">kubectl create  <span class="hljs-built_in"></span><br><span class="hljs-built_in">secret </span>docker-registry aliyun-registry-secret <br><span class="hljs-attribute">--docker-server</span>=registry-vpc.cn-hangzhou.aliyuncs.com <br><span class="hljs-attribute">--docker-username</span>=*** <br><span class="hljs-attribute">--docker-password</span>=*** <br><span class="hljs-attribute">--docker-email</span>=***<br></code></pre></td></tr></table></figure>
+
+<p>自己应用的crd Yaml</p>
+<figure class="highlight nestedtext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs nestedtext"><span class="hljs-attribute">apiVersion</span><span class="hljs-punctuation">:</span> <span class="hljs-string">springboot.qingmu.io/v1alpha1</span><br><span class="hljs-attribute">kind</span><span class="hljs-punctuation">:</span> <span class="hljs-string">SpringBootApplication</span><br><span class="hljs-attribute">metadata</span><span class="hljs-punctuation">:</span><br>  <span class="hljs-attribute">name</span><span class="hljs-punctuation">:</span> <span class="hljs-string">你的应用的名称</span><br><span class="hljs-attribute">spec</span><span class="hljs-punctuation">:</span><br>  <span class="hljs-attribute">springBoot</span><span class="hljs-punctuation">:</span><br>    <span class="hljs-attribute">version</span><span class="hljs-punctuation">:</span> <span class="hljs-string">v1.0.0</span><br>    <span class="hljs-attribute">replicas</span><span class="hljs-punctuation">:</span> <span class="hljs-string">1 </span><br>    <span class="hljs-attribute">image</span><span class="hljs-punctuation">:</span> <span class="hljs-string">你的image地址</span><br>    <span class="hljs-attribute">imagePullSecrets</span><span class="hljs-punctuation">: </span><br>      <span class="hljs-bullet">-</span> <span class="hljs-string">上面创建的secret</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="一个完整的Spring-Boot-Application-Yaml"><a href="#一个完整的Spring-Boot-Application-Yaml" class="headerlink" title="一个完整的Spring Boot Application Yaml"></a>一个完整的Spring Boot Application Yaml</h2><p>下面是一个完整的yaml属性结构，大部分属性我们都可以用默认配置的即可。推荐：<a target="_blank" rel="noopener" href="http://mp.weixin.qq.com/s?__biz=MzIyNDU2ODA4OQ==&mid=2247484532&idx=1&sn=1c243934507d79db4f76de8ed0e5727f&chksm=e80db202df7a3b14fe7077b0fe5ec4de4088ce96a2cde16cbac21214956bd6f2e8f51193ee2b&scene=21#wechat_redirect">一百期Java面试题汇总</a></p>
+<p>不设置属性，默认使用Operator中设置的通用值详见后面的自定义安装Operator。</p>
+<figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><code class="hljs dts"><span class="hljs-symbol">apiVersion:</span> springboot.qingmu.io/v1alpha1<br><span class="hljs-symbol">kind:</span> SpringBootApplication<br><span class="hljs-symbol">metadata:</span><br><span class="hljs-symbol">  name:</span> operator-demo<br><span class="hljs-symbol">  namespace:</span> default<br><span class="hljs-symbol">spec:</span><br><span class="hljs-symbol">  springBoot:</span><br>    <span class="hljs-meta"># image 可以不设置，如果不设置默认使用 IMAGE_REPOSITORY+/+mate.name+:+spec.springBoot.version</span><br>    <span class="hljs-meta"># registry.cn-shanghai.aliyuncs.com/qingmuio + / + operator-demo + : + v1.0.0</span><br><span class="hljs-symbol">    image:</span> registry.cn-shanghai.aliyuncs.com<span class="hljs-keyword">/qingmuio/</span>operator-demo:v1<span class="hljs-number">.0</span><span class="hljs-number">.0</span><br><span class="hljs-symbol">    clusterIp:</span> <span class="hljs-string">&quot;&quot;</span> <br><span class="hljs-symbol">    version:</span> v1<span class="hljs-number">.0</span><span class="hljs-number">.0</span> <br><span class="hljs-symbol">    replicas:</span> <span class="hljs-number">1</span> <br><span class="hljs-symbol">    resource:</span><br><span class="hljs-symbol">      cpu:</span><br><span class="hljs-symbol">        request:</span> <span class="hljs-number">50</span>m<br><span class="hljs-symbol">        limit:</span> <span class="hljs-string">&quot;&quot;</span> <br><span class="hljs-symbol">      memory:</span><br><span class="hljs-symbol">        request:</span> <span class="hljs-number">1</span>Gi<br><span class="hljs-symbol">        limit:</span> <span class="hljs-number">1</span>Gi <br><span class="hljs-symbol">    path:</span><br><span class="hljs-symbol">      liveness:</span> <span class="hljs-keyword">/actuator/</span>health <br><span class="hljs-symbol">      readiness:</span> <span class="hljs-keyword">/actuator/</span>health <br><span class="hljs-symbol">      hostLog:</span> <span class="hljs-keyword">/var/</span>applog <br><span class="hljs-symbol">      shutdown:</span> <span class="hljs-keyword">/spring/</span>shutdown <br><span class="hljs-symbol">    imagePullSecrets:</span> <br>      - aliyun-docker-registry-secret<br><span class="hljs-symbol">    env:</span> <br>      - name: EUREKA_SERVERS<br><span class="hljs-symbol">        value:</span> http:<span class="hljs-comment">//eureka1:8761/eureka/,http://eureka2:8761/eureka/,http://eureka3:8761/eureka/</span><br><span class="hljs-symbol">    nodeAffinity:</span> <br><span class="hljs-symbol">      key:</span> <span class="hljs-string">&quot;failure-domain.beta.kubernetes.io/zone&quot;</span><br><span class="hljs-symbol">      operator:</span> <span class="hljs-string">&quot;In&quot;</span><br><span class="hljs-symbol">      values:</span><br>        - <span class="hljs-string">&quot;cn-i&quot;</span><br>        - <span class="hljs-string">&quot;cn-h&quot;</span><br>        - <span class="hljs-string">&quot;cn-g&quot;</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="优雅停机的路径"><a href="#优雅停机的路径" class="headerlink" title="优雅停机的路径"></a>优雅停机的路径</h3><p>由于优雅停机默认是关闭的并且并不支持Get请求所以我们需要开启和搭个桥</p>
+<p>首先在application.yml中启用</p>
+<figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs dts"><span class="hljs-symbol">management:</span><br><span class="hljs-symbol">  endpoints:</span><br><span class="hljs-symbol">    web:</span><br><span class="hljs-symbol">      exposure:</span><br><span class="hljs-symbol">        include:</span> <span class="hljs-string">&quot;*&quot;</span><br><span class="hljs-symbol">  endpoint:</span><br><span class="hljs-symbol">    shutdown:</span><br><span class="hljs-symbol">      enabled:</span> true<br></code></pre></td></tr></table></figure>
+
+<p>然后桥接一个Get方法</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs typescript"><span class="hljs-meta">@RestController</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">ShutdownController</span> &#123;<br>    <span class="hljs-meta">@Autowired</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-title class_">ShutdownEndpoint</span> shutdownEndpoint;<br><br>    <span class="hljs-meta">@GetMapping</span>(<span class="hljs-string">&quot;/spring/shutdown&quot;</span>)<br>    <span class="hljs-keyword">public</span> <span class="hljs-title class_">Map</span>&lt;<span class="hljs-title class_">String</span>, <span class="hljs-title class_">String</span>&gt; <span class="hljs-title function_">shutdown</span>(<span class="hljs-params">HttpServletRequest request</span>) &#123;<br>        <span class="hljs-keyword">return</span> shutdownEndpoint.<span class="hljs-title function_">shutdown</span>();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="node亲和的使用"><a href="#node亲和的使用" class="headerlink" title="node亲和的使用"></a>node亲和的使用</h3><p>举一个列子 我们有一个springboot应用 user-service 希望他能分布到3个可用区的6个节点上:</p>
+<p>首先我们把机器划分多个可用区</p>
+<figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs crmsh">cn-i区(<span class="hljs-keyword">node</span><span class="hljs-title">-i1</span>,<span class="hljs-keyword">node</span><span class="hljs-title">-i02</span>)<br>cn-h区(<span class="hljs-keyword">node</span><span class="hljs-title">-g1</span>,<span class="hljs-keyword">node</span><span class="hljs-title">-g02</span>)<br>cn-g区(<span class="hljs-keyword">node</span><span class="hljs-title">-h1</span>,<span class="hljs-keyword">node</span><span class="hljs-title">-h02</span>)<br></code></pre></td></tr></table></figure>
+
+<p>现在我们有三个可以区 每个区有2台workload，一共6台。然后我们需要给这些机器分别打上label。</p>
+<p>将全部的i区机器标注为cn-i</p>
+<figure class="highlight maxima"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs maxima">kubectl <span class="hljs-built_in">label</span> node node-<span class="hljs-built_in">i1</span> failure-<span class="hljs-built_in">domain</span>.<span class="hljs-built_in">beta</span>.kubernetes.io/zone=cn-i<br>kubectl <span class="hljs-built_in">label</span> node node-i2 failure-<span class="hljs-built_in">domain</span>.<span class="hljs-built_in">beta</span>.kubernetes.io/zone=cn-i<br></code></pre></td></tr></table></figure>
+
+<p>同理将h区的标注为h，g区同理</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs stylus">kubectl <span class="hljs-selector-tag">label</span> node node-<span class="hljs-selector-tag">h1</span> failure-domain<span class="hljs-selector-class">.beta</span><span class="hljs-selector-class">.kubernetes</span>.io/zone=cn-<span class="hljs-selector-tag">i</span><br>kubectl <span class="hljs-selector-tag">label</span> node node-ih2 failure-domain<span class="hljs-selector-class">.beta</span><span class="hljs-selector-class">.kubernetes</span>.io/zone=cn-i<br></code></pre></td></tr></table></figure>
+
+<p>现在准备工作我们就绪了，现在我们来设置让它达到我们的调度效果，像如下编写即可。</p>
+<figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs dts"><span class="hljs-symbol">spec:</span><br><span class="hljs-symbol">  springBoot:</span><br><span class="hljs-symbol">    nodeAffinity:</span> <span class="hljs-meta">#可以不设置 节点亲和 这里演示的是尽量将pod分散到 i h g 三个可用区，默认设置了pod反亲和</span><br><span class="hljs-symbol">      key:</span> <span class="hljs-string">&quot;failure-domain.beta.kubernetes.io/zone&quot;</span><br><span class="hljs-symbol">      operator:</span> <span class="hljs-string">&quot;In&quot;</span><br><span class="hljs-symbol">      values:</span><br>        - <span class="hljs-string">&quot;cn-i&quot;</span><br>        - <span class="hljs-string">&quot;cn-h&quot;</span><br>        - <span class="hljs-string">&quot;cn-g&quot;</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="Operator-自定义安装"><a href="#Operator-自定义安装" class="headerlink" title="Operator 自定义安装"></a>Operator 自定义安装</h2><p>上面我们快速的安装了好了，接着我们来讲解下如何自定义安装，以及有哪些自定义的参数，可以个性化的参数我们用环境变量的方式注入。</p>
+<p>下面来修改Deployment完成自己个性化的配置部署，从我提供的部署yaml中拉倒最后，找到name是spring-boot-operator-controller-manager的Deployment，我们将修改它。</p>
+<figure class="highlight nestedtext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><code class="hljs nestedtext"><span class="hljs-attribute">apiVersion</span><span class="hljs-punctuation">:</span> <span class="hljs-string">apps/v1</span><br><span class="hljs-attribute">kind</span><span class="hljs-punctuation">:</span> <span class="hljs-string">Deployment</span><br><span class="hljs-attribute">metadata</span><span class="hljs-punctuation">:</span><br>  <span class="hljs-attribute">labels</span><span class="hljs-punctuation">:</span><br>    <span class="hljs-attribute">control-plane</span><span class="hljs-punctuation">:</span> <span class="hljs-string">controller-manager</span><br>  <span class="hljs-attribute">name</span><span class="hljs-punctuation">:</span> <span class="hljs-string">spring-boot-operator-controller-manager</span><br>  <span class="hljs-attribute">namespace</span><span class="hljs-punctuation">:</span> <span class="hljs-string">spring-boot-operator-system</span><br>.....<br><br>        <span class="hljs-comment">#注意：一下配置针对通用全局的spring boot默认配置，对crd的spring boot生效，这里不配置也可以在部署的yaml中指定</span><br><br>        <span class="hljs-comment"># 私有仓库的地址，比如我的最终打包的镜像地址是 registry.cn-shanghai.aliyuncs.com/qingmuio/operator-demo/operator-demo:v1.0.0</span><br>        <span class="hljs-comment"># 那么配置的值是 registry.cn-shanghai.aliyuncs.com/qingmuio/operator-demo</span><br>        <span class="hljs-comment"># 配置这个值之后，我们我们如果在发布的yaml中不写image，那么使用的image就是 IMAGE_REPOSITORY+&quot;/&quot;+mate.name+spec.springBoot.version</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: IMAGE_REPOSITORY</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">registry.cn-shanghai.aliyuncs.com/qingmuio</span><br>        <span class="hljs-comment"># 请求CPU限制</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: REQUEST_CPU</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">50m</span><br>        <span class="hljs-comment"># 限制最大能用最大CPU java应用可以不用限制，限制不合理会导致启动异常缓慢</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: LIMIT_CPU</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;&quot;</span><br>        <span class="hljs-comment"># 请求内存大小</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: REQUEST_MEMORY</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">500Mi</span><br>        <span class="hljs-comment"># 限制最大内存大小 一般和request一样大即可</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: LIMIT_MEMORY</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">500Mi</span><br>        <span class="hljs-comment"># 就绪检查Path，spring boot actuator 默认Path</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: READINESS_PATH</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">/actuator/health</span><br>        <span class="hljs-comment"># 就绪存活Path，spring boot actuator 默认Path</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: LIVENESS_PATH</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">/actuator/health</span><br>        <span class="hljs-comment"># 就绪存活Path，优雅停机Path</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: SHUTDOWN_PATH</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">/spring/shutdown</span><br>        <span class="hljs-comment"># 复制级 即副本数</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: REPLICAS</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;3&quot;</span><br>        <span class="hljs-comment"># 将日志外挂到主机磁盘Path，默认两者相同</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: HOST_LOG_PATH</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">/var/applog</span><br>        <span class="hljs-comment"># 用于pull 镜像的secrets</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: IMAGE_PULL_SECRETS</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;&quot;</span><br>        <span class="hljs-comment"># 用于pull 镜像的secrets</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: SPRING_BOOT_DEFAULT_PORT</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;8080&quot;</span><br>        <span class="hljs-comment"># node亲和，比如我可以设置pod尽量分散在不同可用区cn-i,cn-g,cn-h区</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: NODE_AFFINITY_KEY</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;&quot;</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: NODE_AFFINITY_OPERATOR</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;&quot;</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: NODE_AFFINITY_VALUES</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;&quot;</span><br>        <span class="hljs-comment"># 全局的环境变量，会追加到每个spring boot的每个pod中，格式 k=v;k1=v2,</span><br>        <span class="hljs-comment"># 如 EUREKA_SERVERS=http://eureka1:8761/eureka/,http://eureka2:8761/eureka/,http://eureka3:8761/eureka/;k=v</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">name: SPRING_BOOT_ENV</span><br>          <span class="hljs-attribute">value</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;&quot;</span><br>        <span class="hljs-attribute">image</span><span class="hljs-punctuation">:</span> <span class="hljs-string">registry.cn-shanghai.aliyuncs.com/qingmuio/spring-boot-operator-controller:latest</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="自定义安装之后部署"><a href="#自定义安装之后部署" class="headerlink" title="自定义安装之后部署"></a>自定义安装之后部署</h3><p>yaml可以简化为如下。</p>
+<figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs dts"><span class="hljs-symbol">apiVersion:</span> springboot.qingmu.io/v1alpha1<br><span class="hljs-symbol">kind:</span> SpringBootApplication<br><span class="hljs-symbol">metadata:</span><br><span class="hljs-symbol">  name:</span> 你的应用的名称<br><span class="hljs-symbol">spec:</span><br><span class="hljs-symbol">  springBoot:</span><br><span class="hljs-symbol">    version:</span> v1<span class="hljs-number">.0</span><span class="hljs-number">.0</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h2><p>环境变量表格</p>
+<p><img src="https://www.javazhiyin.com/wp-content/uploads/2020/06/java5-1592962224.png" srcset="/img/loading.gif" lazyload alt="部署SpringBoot应用到K8S教程" title="部署SpringBoot应用到K8S教程"></p>
+<h2 id="Github仓库"><a href="#Github仓库" class="headerlink" title="Github仓库"></a>Github仓库</h2><blockquote>
+<p>SpringBootOperator: <a target="_blank" rel="noopener" href="https://github.com/goudai/spring-boot-operator">https://github.com/goudai/spring-boot-operator</a></p>
+</blockquote>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E8%BF%90%E7%BB%B4/">#运维</a>
+      
+        <a href="/tags/%E9%83%A8%E7%BD%B2/">#部署</a>
+      
+        <a href="/tags/%E6%9E%B6%E6%9E%84/">#架构</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>springboot应用部署至k8s</div>
+      <div>https://kanchai.club/2022/12/10/springboot应用部署至k8s/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>625</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年12月10日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/12/10/%E3%80%9063%E6%9C%9F%E3%80%91%E8%B0%88%E8%B0%88MySQL%20%E7%B4%A2%E5%BC%95%EF%BC%8CB+%E6%A0%91%E5%8E%9F%E7%90%86%EF%BC%8C%E4%BB%A5%E5%8F%8A%E5%BB%BA%E7%B4%A2%E5%BC%95%E7%9A%84%E5%87%A0%E5%A4%A7%E5%8E%9F%E5%88%99%EF%BC%88MySQL%E9%9D%A2%E8%AF%95%E7%AC%AC%E5%85%AD%E5%BC%B9%EF%BC%89/" title="【63期】谈谈MySQL 索引，B+树原理，以及建索引的几大原则（MySQL面试第六弹）">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">【63期】谈谈MySQL 索引，B+树原理，以及建索引的几大原则（MySQL面试第六弹）</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/12/10/springmvc%E5%AE%9E%E7%8E%B0%E5%8F%82%E6%95%B0%E5%A4%84%E7%90%86%EF%BC%8Crsa%E8%A7%A3%E5%AF%86%E6%95%B0%E6%8D%AE/" title="springmvc实现参数处理，rsa解密数据">
+                        <span class="hidden-mobile">springmvc实现参数处理，rsa解密数据</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+    <div id="giscus" class="giscus"></div>
+    <script type="text/javascript">
+      Fluid.utils.loadComments('#giscus', function() {
+        var options = {"repo":"stupdit1t/625","repo-id":"MDEwOlJlcG9zaXRvcnkyNDQ3ODMzOTM=","category":"General","category-id":"DIC_kwDODpcZIc4CSeTH","theme-light":"light","theme-dark":"dark","mapping":"pathname","reactions-enabled":1,"emit-metadata":0,"input-position":"top","lang":"zh-CN","//mapping":"title"};
+        var attributes = {};
+        for (let option in options) {
+          if (!option.startsWith('theme-')) {
+            var key = option.startsWith('data-') ? option : 'data-' + option;
+            attributes[key] = options[option];
+          }
+        }
+        var light = 'light';
+        var dark = 'dark';
+        window.GiscusThemeLight = light;
+        window.GiscusThemeDark = dark;
+        attributes['data-theme'] = document.documentElement.getAttribute('data-user-color-scheme') === 'dark' ? dark : light;
+        for (let attribute in attributes) {
+          var value = attributes[attribute];
+          if (value === undefined || value === null || value === '') {
+            delete attributes[attribute];
+          }
+        }
+        var s = document.createElement('script');
+        s.setAttribute('src', 'https://giscus.app/client.js');
+        s.setAttribute('crossorigin', 'anonymous');
+        for (let attribute in attributes) {
+          s.setAttribute(attribute, attributes[attribute]);
+        }
+        var ss = document.getElementsByTagName('script');
+        var e = ss.length > 0 ? ss[ss.length - 1] : document.head || document.documentElement;
+        e.parentNode.insertBefore(s, e.nextSibling);
+      });
+    </script>
+    <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/stupdit1t" target="_blank" rel="nofollow noopener"><span>625</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

@@ -1,1 +1,867 @@
-<!DOCTYPE html><html lang="zh-CN" data-default-color-scheme="auto"><head><meta charset="UTF-8"><link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png"><link rel="icon" href="/img/fluid.png"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,shrink-to-fit=no"><meta http-equiv="x-ua-compatible" content="ie=edge"><meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"><meta name="theme-color" content="#2f4154"><meta name="author" content="625"><meta name="keywords" content=""><meta name="description" content="首先声明，本文并不是什么代码实战类型的文章，适合于想对dubbo有更加全面认识的读者阅读，文章不会过于深奥，只是将一系列的知识点串通起来，帮助读者温故而知新。 RPC服务的介绍相信有过一些分布式开发经历的读者都有用过一些RPC框架，通过框架包装好之后提供的API接口调用远程服务，体验感觉起来就和调用本地服务一样轻松。这么方便好用的技术框架，在实际的开发过程中是如何包装的呢? 很早的时候，国外的工程"><meta property="og:type" content="article"><meta property="og:title" content="大白话带你梳理一下Dubbo的那些事儿"><meta property="og:url" content="https://kanchai.club/2022/12/10/%E5%A4%A7%E7%99%BD%E8%AF%9D%E5%B8%A6%E4%BD%A0%E6%A2%B3%E7%90%86%E4%B8%80%E4%B8%8BDubbo%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/index.html"><meta property="og:site_name" content="625"><meta property="og:description" content="首先声明，本文并不是什么代码实战类型的文章，适合于想对dubbo有更加全面认识的读者阅读，文章不会过于深奥，只是将一系列的知识点串通起来，帮助读者温故而知新。 RPC服务的介绍相信有过一些分布式开发经历的读者都有用过一些RPC框架，通过框架包装好之后提供的API接口调用远程服务，体验感觉起来就和调用本地服务一样轻松。这么方便好用的技术框架，在实际的开发过程中是如何包装的呢? 很早的时候，国外的工程"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="https://www.javazhiyin.com/wp-content/uploads/2020/01/java1-1578536515.png"><meta property="og:image" content="https://www.javazhiyin.com/wp-content/uploads/2020/01/java9-1578536515.png"><meta property="og:image" content="https://www.javazhiyin.com/wp-content/uploads/2020/01/java7-1578536515.png"><meta property="article:published_time" content="2022-12-10T08:53:33.532Z"><meta property="article:modified_time" content="2022-12-10T08:53:33.532Z"><meta property="article:author" content="625"><meta property="article:tag" content="Dubbo"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="https://www.javazhiyin.com/wp-content/uploads/2020/01/java1-1578536515.png"><meta name="referrer" content="no-referrer-when-downgrade"><title>大白话带你梳理一下Dubbo的那些事儿 - 625</title><link rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css"><link rel="stylesheet" href="/css/main.css"><link id="highlight-css" rel="stylesheet" href="/css/highlight.css"><link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css"><script id="fluid-configs">var Fluid=window.Fluid||{};Fluid.ctx=Object.assign({},Fluid.ctx);var CONFIG={hostname:"kanchai.club",root:"/",version:"1.9.3",typing:{enable:!0,typeSpeed:70,cursorChar:"_",loop:!1,scope:[]},anchorjs:{enable:!0,element:"h1,h2,h3,h4,h5,h6",placement:"left",visible:"hover",icon:""},progressbar:{enable:!0,height_px:3,color:"#29d",options:{showSpinner:!1,trickleSpeed:100}},code_language:{enable:!0,default:"TEXT"},copy_btn:!0,image_caption:{enable:!0},image_zoom:{enable:!0,img_url_replace:["",""]},toc:{enable:!0,placement:"right",headingSelector:"h1,h2,h3,h4,h5,h6",collapseDepth:0},lazyload:{enable:!0,loading_img:"/img/loading.gif",onlypost:!1,offset_factor:2},web_analytics:{enable:!0,follow_dnt:!0,baidu:"8b23e0bc706b35d094ee08fd97ebfbed",google:null,gtag:null,tencent:{sid:null,cid:null},woyaola:null,cnzz:null,leancloud:{app_id:null,app_key:null,server_url:null,path:"window.location.pathname",ignore_local:!1}},search_path:"/local-search.xml"};if(CONFIG.web_analytics.follow_dnt){var dntVal=navigator.doNotTrack||window.doNotTrack||navigator.msDoNotTrack;Fluid.ctx.dnt=dntVal&&(dntVal.startsWith("1")||dntVal.startsWith("yes")||dntVal.startsWith("on"))}</script><script src="/js/utils.js"></script><script src="/js/color-schema.js"></script><script async>if(!Fluid.ctx.dnt){var _hmt=_hmt||[];!function(){var e=document.createElement("script");e.src="https://hm.baidu.com/hm.js?8b23e0bc706b35d094ee08fd97ebfbed";var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)}()}</script><meta name="generator" content="Hexo 6.2.0"></head><body><header><div class="header-inner" style="height:70vh"><nav id="navbar" class="navbar fixed-top navbar-expand-lg navbar-dark scrolling-navbar"><div class="container"><a class="navbar-brand" href="/"><strong>625</strong> </a><button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><div class="animated-icon"><span></span><span></span><span></span></div></button><div class="collapse navbar-collapse" id="navbarSupportedContent"><ul class="navbar-nav ml-auto text-center"><li class="nav-item"><a class="nav-link" href="/"><i class="iconfont icon-home-fill"></i> 首页</a></li><li class="nav-item"><a class="nav-link" href="/archives/"><i class="iconfont icon-archive-fill"></i> 归档</a></li><li class="nav-item"><a class="nav-link" href="/categories/"><i class="iconfont icon-category-fill"></i> 分类</a></li><li class="nav-item"><a class="nav-link" href="/tags/"><i class="iconfont icon-tags-fill"></i> 标签</a></li><li class="nav-item"><a class="nav-link" href="/about/"><i class="iconfont icon-user-fill"></i> 关于</a></li><li class="nav-item" id="search-btn"><a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">&nbsp;<i class="iconfont icon-search"></i>&nbsp;</a></li><li class="nav-item" id="color-toggle-btn"><a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a></li></ul></div></div></nav><div id="banner" class="banner" parallax="true" style="background:url(/img/default.png) no-repeat center center;background-size:cover"><div class="full-bg-img"><div class="mask flex-center" style="background-color:rgba(0,0,0,.3)"><div class="banner-text text-center fade-in-up"><div class="h2"><span id="subtitle" data-typed-text="大白话带你梳理一下Dubbo的那些事儿"></span></div><div class="mt-3"><span class="post-meta mr-2"><i class="iconfont icon-author" aria-hidden="true"></i> 625 </span><span class="post-meta"><i class="iconfont icon-date-fill" aria-hidden="true"></i> <time datetime="2022-12-10 16:53" pubdate>2022年12月10日 下午</time></span></div><div class="mt-1"><span class="post-meta mr-2"><i class="iconfont icon-chart"></i> 9.8k 字 </span><span class="post-meta mr-2"><i class="iconfont icon-clock-fill"></i> 82 分钟 </span><span id="busuanzi_container_page_pv" style="display:none"><i class="iconfont icon-eye" aria-hidden="true"></i> <span id="busuanzi_value_page_pv"></span> 次</span></div></div></div></div></div></div></header><main><div class="container-fluid nopadding-x"><div class="row nomargin-x"><div class="side-col d-none d-lg-block col-lg-2"></div><div class="col-lg-8 nopadding-x-md"><div class="container nopadding-x-md" id="board-ctn"><div id="board"><article class="post-content mx-auto"><h1 style="display:none">大白话带你梳理一下Dubbo的那些事儿</h1><div class="markdown-body"><p><em>首先声明，本文并不是什么代码实战类型的文章，适合于想对dubbo有更加全面认识的读者阅读，文章不会过于深奥，只是将一系列的知识点串通起来，帮助读者温故而知新。</em></p><h2 id="RPC服务的介绍"><a href="#RPC服务的介绍" class="headerlink" title="RPC服务的介绍"></a>RPC服务的介绍</h2><p>相信有过一些分布式开发经历的读者都有用过一些RPC框架，通过框架包装好之后提供的API接口调用远程服务，体验感觉起来就和调用本地服务一样轻松。<strong>这么方便好用的技术框架，在实际的开发过程中是如何包装的呢?</strong></p><p>很早的时候，国外的工程师设计了一种能够通过A计算机调用B计算机上边应用程序的技术，这种技术不需要开发人员对于网络通讯了解过多，并且调用其他机器上边程序的时候和调用本地的程序一样方便好用。</p><p>A机器发起请求去调用B机器程序的时候会被挂起，B机器接收到A机器发起的请求参数之后会做一定的参数转换，最后将对应的程序结果返回给A，这就是最原始的RPC服务调用了。</p><h2 id="RPC调用的优势"><a href="#RPC调用的优势" class="headerlink" title="RPC调用的优势"></a>RPC调用的优势</h2><h3 id="简单"><a href="#简单" class="headerlink" title="简单"></a>简单</h3><p><strong>不需要开发者对于网络通信做过多的设置</strong>，例如我们在使用http协议进行远程接口调用的时候，总是会需要编写较多的http协议参数（header，context，Accept-Language,Accept-Encode等等），这些处理对于开发人员来说，实际上都并不是特别友好。但是RPC服务调用框架通常都将这类解析进行了对应的封装，大大降低了开发人员的使用难度。</p><h3 id="高效"><a href="#高效" class="headerlink" title="高效"></a>高效</h3><p>在网络传输方面，RPC更多是处于应用层和传输层之间。这里我们需要先理清楚一个问题，网络分层。RPC是处于会话层的部分，相比处于应用层的HTTP而言，<strong>RPC要比Rest服务调用更加轻便。</strong></p><h2 id="常见的远程调用技术"><a href="#常见的远程调用技术" class="headerlink" title="常见的远程调用技术"></a>常见的远程调用技术</h2><h3 id="rmi"><a href="#rmi" class="headerlink" title="rmi"></a>rmi</h3><p>利用java.rmi包实现，<strong>基于Java远程方法协议(Java Remote Method Protocol) 和java的原生序列化</strong>。</p><h3 id="Hessian"><a href="#Hessian" class="headerlink" title="Hessian"></a>Hessian</h3><p><strong>是一个轻量级的remoting onhttp工具</strong>，使用简单的方法提供了RMI的功能。基于HTTP协议，采用二进制编解码。</p><h3 id="protobuf-rpc-pro"><a href="#protobuf-rpc-pro" class="headerlink" title="protobuf-rpc-pro"></a>protobuf-rpc-pro</h3><p><strong>是一个Java类库</strong>，提供了基于 Google 的 Protocol Buffers 协议的远程方法调用的框架。基于 Netty 底层的 NIO 技术。支持 TCP 重用&#x2F; keep-alive、SSL加密、RPC 调用取消操作、嵌入式日志等功能。</p><h3 id="Thrift"><a href="#Thrift" class="headerlink" title="Thrift"></a>Thrift</h3><p><strong>是一种可伸缩的跨语言服务的软件框架</strong>。它拥有功能强大的代码生成引擎，无缝地支持C + +，C#，Java，Python和PHP和Ruby。thrift允许你定义一个描述文件，描述数据类型和服务接口。依据该文件，编译器方便地生成RPC客户端和服务器通信代码。</p><p>最初由facebook开发用做系统内部语言之间的RPC通信，2007年由facebook贡献到apache基金 ，现在是apache下的opensource之一 。支持多种语言之间的RPC方式的通信：php语言client可以构造一个对象，调用相应的服务方法来调用java语言的服务，跨越语言的C&#x2F;S RPC调用。底层通讯基于SOCKET。</p><h3 id="Avro"><a href="#Avro" class="headerlink" title="Avro"></a>Avro</h3><p><strong>出自Hadoop之父Doug Cutting</strong>, 在Thrift已经相当流行的情况下推出Avro的目标不仅是提供一套类似Thrift的通讯中间件,更是要建立一个新的，标准性的云计算的数据交换和存储的Protocol。支持HTTP，TCP两种协议。</p><h3 id="Dubbo"><a href="#Dubbo" class="headerlink" title="Dubbo"></a>Dubbo</h3><p><strong>Dubbo是 阿里巴巴公司开源的一个高性能优秀的服务框架****，使得应用可通过高性能的 RPC 实现服务的输出和输入功能，可以和 Spring框架无缝集成。</strong></p><p>上边我们说到了RPC的远程调用发展历史，那么下边我们一起来深入探讨一下RPC的服务。</p><p>首先我们来看看OSI的网络协议内容。</p><h2 id="OSI的七层网络模型"><a href="#OSI的七层网络模型" class="headerlink" title="OSI的七层网络模型"></a>OSI的七层网络模型</h2><p>对于OSI的七层网络模型我绘制了下边的这么一张图：</p><p><img src="https://www.javazhiyin.com/wp-content/uploads/2020/01/java1-1578536515.png" srcset="/img/loading.gif" lazyload alt="大白话带你梳理一下Dubbo的那些事儿" title="大白话带你梳理一下Dubbo的那些事儿"></p><p><strong>下边是我个人对于这七层协议的理解：</strong></p><ul><li><p><strong>应用层</strong> 主要是对于服务接口的格式多定义，例如提供一定的终端接口暴露给外部应用调用。</p></li><li><p><strong>表示层</strong> 处理一些数据传输的格式转换，例如说编码的统一，加密和解密处理。</p></li><li><p><strong>会话层</strong> 管理用户的会话和对话，建立不同机器之间的会话连接。</p></li><li><p><strong>传输层</strong> 向网络层提供可靠有序的数据包信息。</p></li><li><p><strong>网络层</strong> 真正发送数据包信息的层面，提供流和拥塞控制，从而降低网络的资源损耗。</p></li><li><p><strong>数据链路层</strong> 封装对应的数据包，检测和纠正数据包传输信息。</p></li><li><p><strong>物理层</strong> 通过网络通讯设备发送数据</p></li></ul><h2 id="HTTP-amp-RPC"><a href="#HTTP-amp-RPC" class="headerlink" title="HTTP &amp; RPC"></a>HTTP &amp; RPC</h2><p>HTTP主要是位于TCP&#x2F;IP协议栈的应用层部分，首先需要构建三次握手的链接，接着才能进行数据信息的请求发送，最后进行四次挥手断开链接。</p><p>RPC在请求的过程中跨越了传输层和应用层，这是因为它本身是依赖于Socket的原因。（再深入的原因我也不知道）。减少了上边几层的封装，RPC的请求效率自然是要比HTTP高效很多。</p><p><strong>那么一个完整的RPC调用应该包含哪些部分呢？</strong></p><p>通常我们将一个完整的RPC架构分为了以下几个核心组件：</p><ul><li><p>Server</p></li><li><p>Client</p></li><li><p>Server Stub</p></li><li><p>Client Stub</p></li></ul><p>这四个模块中我稍微说下stub吧。这个单词翻译过来称之为存根。</p><p>**Client Stub **就是将客户端请求的参数，服务名称，服务地址进行打包，统一发送给server方。</p><p>**Server Stub **我用通俗易懂的语言来解释就是服务端接收到Client发送的数据之后进行消息解包，调用本地方法。（看过netty拆包机制应该会对这块比较了解）。</p><h2 id="Dubbo的核心属性"><a href="#Dubbo的核心属性" class="headerlink" title="Dubbo的核心属性"></a>Dubbo的核心属性</h2><p>其实Dubbo配置里面的核心内容就是 _<strong>服务暴露，服务发现，服务治理</strong>_。</p><h3 id="什么是服务暴露，服务发现，服务治理？"><a href="#什么是服务暴露，服务发现，服务治理？" class="headerlink" title="什么是服务暴露，服务发现，服务治理？"></a>什么是服务暴露，服务发现，服务治理？</h3><p>下边我们用一段xml的配置来进行讲解：</p><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-meta">&lt;?xml version=<span class="hljs-string">&quot;1.0&quot;</span> encoding=<span class="hljs-string">&quot;UTF-8&quot;</span>?&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">beans</span> <span class="hljs-attr">xmlns:xsi</span>=<span class="hljs-string">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span></span><br><span class="hljs-tag">       <span class="hljs-attr">xmlns:dubbo</span>=<span class="hljs-string">&quot;http://code.alibabatech.com/schema/dubbo&quot;</span></span><br><span class="hljs-tag">       <span class="hljs-attr">xmlns</span>=<span class="hljs-string">&quot;http://www.springframework.org/schema/beans&quot;</span></span><br><span class="hljs-tag">       <span class="hljs-attr">xsi:schemaLocation</span>=<span class="hljs-string">&quot;http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd</span></span><br><span class="hljs-string"><span class="hljs-tag">    http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd&quot;</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">dubbo:application</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;dubbo-invoker-provider&quot;</span>&gt;</span><br>        <span class="hljs-tag">&lt;<span class="hljs-name">dubbo:parameter</span> <span class="hljs-attr">key</span>=<span class="hljs-string">&quot;qos.port&quot;</span> <span class="hljs-attr">value</span>=<span class="hljs-string">&quot;22222&quot;</span>/&gt;</span><br>    <span class="hljs-tag">&lt;/<span class="hljs-name">dubbo:application</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">dubbo:registry</span> <span class="hljs-attr">address</span>=<span class="hljs-string">&quot;zookeeper://127.0.0.1:2181&quot;</span>/&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">dubbo:protocol</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;dubbo&quot;</span> <span class="hljs-attr">port</span>=<span class="hljs-string">&quot;20880&quot;</span>/&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">bean</span> <span class="hljs-attr">id</span>=<span class="hljs-string">&quot;userService&quot;</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;com.sise.user.service.UserServiceImpl&quot;</span> /&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">dubbo:service</span> <span class="hljs-attr">interface</span>=<span class="hljs-string">&quot;com.sise.user.service.UserService&quot;</span> <span class="hljs-attr">ref</span>=<span class="hljs-string">&quot;userService&quot;</span> /&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">beans</span>&gt;</span><br></code></pre></td></tr></table></figure><p>在dubbo的配置文件里面，通常我们所说的<strong>dubbo:service</strong> 可以理解为服务暴露，<strong>dubbo:refernce</strong> 为服务发现，<strong>mock</strong>是服务治理，<strong>timeout</strong>属于服务治理的一种（性能调优）.</p><p>假设dubbo里面希望将一些公共的配置抽取出来，我们可以通过properties文件进行配置，dubbo在加载配置文件的优先顺序如下：</p><ol><li><p>优先会读取JVM -D启动参数后边的内容</p></li><li><p>读取xml配置文件</p></li><li><p>读取properties配置文件内容</p></li></ol><p>dubbo默认会读取dubbo.properties配置文件的信息，例如下边这种配置：</p><figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-attr">dubbo.application.name</span>=dubbo-user-service<br><span class="hljs-attr">dubbo.registry.address</span>=zookeeper://<span class="hljs-number">127.0</span>.<span class="hljs-number">0.1</span>:<span class="hljs-number">2181</span><br></code></pre></td></tr></table></figure><p>假设我们的dubbo配置文件不命名为dubbo.properties（假设命名为了my-dubbo.properties）的时候，可以在启动参数的后边加上这么一段指令：</p><figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs applescript">-Ddubbo.properties.<span class="hljs-built_in">file</span>=<span class="hljs-keyword">my</span>-dubbo.properties<br></code></pre></td></tr></table></figure><p>那么在应用程序启动之后，对应的工程就会读取指定的配置文件，这样就可以将一些共用的dubbo配置给抽取了出来。</p><h2 id="XML和配置类的映射"><a href="#XML和配置类的映射" class="headerlink" title="XML和配置类的映射"></a>XML和配置类的映射</h2><p>在工作中，我们通常都会通过配置xml的方式来设定一个服务端暴露的服务接口和消费端需要调用的服务信息，这些配置的xml实际上在dubbo的源码中都会被解析为对应的实体类对象。</p><p>例如说我们常用到的reference配置类，下边我贴出一段代码：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">package</span> com.sise.user.config;<br><span class="hljs-keyword">import</span> com.sise.user.service.UserService;<br><span class="hljs-keyword">import</span> com.sise.user.service.UserServiceImpl;<br><span class="hljs-keyword">import</span> org.apache.dubbo.config.*;<br><span class="hljs-keyword">import</span> java.io.IOException;<br><span class="hljs-keyword">import</span> java.util.concurrent.CountDownLatch;<br><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * dubbo里面的自定义配置类</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@author</span> idea</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@data</span> 2019/12/29</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">DubboSelfDefConfig</span> &#123;<br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * dubbo的服务暴露</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">server</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-type">ApplicationConfig</span> <span class="hljs-variable">applicationConfig</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">ApplicationConfig</span>();<br>        applicationConfig.setName(<span class="hljs-string">&quot;dubbo-server-config&quot;</span>);<br>        <span class="hljs-type">RegistryConfig</span> <span class="hljs-variable">registryConfig</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">RegistryConfig</span>();<br>        registryConfig.setAddress(<span class="hljs-string">&quot;zookeeper://127.0.0.1:2181&quot;</span>);<br>        <span class="hljs-type">ProtocolConfig</span> <span class="hljs-variable">protocolConfig</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">ProtocolConfig</span>();<br>        protocolConfig.setName(<span class="hljs-string">&quot;dubbo&quot;</span>);<br>        protocolConfig.setPort(<span class="hljs-number">20880</span>);<br>        protocolConfig.setThreads(<span class="hljs-number">200</span>);<br>        <span class="hljs-type">UserService</span> <span class="hljs-variable">userService</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">UserServiceImpl</span>();<br>        ServiceConfig&lt;UserService&gt; serviceConfig = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ServiceConfig</span>&lt;&gt;();<br>        serviceConfig.setApplication(applicationConfig);<br>        serviceConfig.setRegistry(registryConfig);<br>        serviceConfig.setProtocol(protocolConfig);<br>        serviceConfig.setInterface(UserService.class);<br>        serviceConfig.setRef(userService);<br>        serviceConfig.export();<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">consumer</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-type">ApplicationConfig</span> <span class="hljs-variable">applicationConfig</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">ApplicationConfig</span>();<br>        applicationConfig.setName(<span class="hljs-string">&quot;dubbo-client-config&quot;</span>);<br>        <span class="hljs-type">RegistryConfig</span> <span class="hljs-variable">registryConfig</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">RegistryConfig</span>();<br>        registryConfig.setAddress(<span class="hljs-string">&quot;zookeeper://127.0.0.1:2181&quot;</span>);<br>        ReferenceConfig&lt;UserService&gt; referenceConfig = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ReferenceConfig</span>&lt;&gt;();<br>        referenceConfig.setApplication(applicationConfig);<br>        referenceConfig.setRegistry(registryConfig);<br>        referenceConfig.setInterface(UserService.class);<br>        <span class="hljs-type">UserService</span> <span class="hljs-variable">localRef</span> <span class="hljs-operator">=</span> referenceConfig.get();<br>        localRef.echo(<span class="hljs-string">&quot;idea&quot;</span>);<br>    &#125;<br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> <span class="hljs-keyword">throws</span> InterruptedException, IOException &#123;<br>        <span class="hljs-type">DubboSelfDefConfig</span> <span class="hljs-variable">d</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">DubboSelfDefConfig</span>();<br>        d.consumer();<br>        <span class="hljs-type">CountDownLatch</span> <span class="hljs-variable">countDownLatch</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">CountDownLatch</span>(<span class="hljs-number">1</span>);<br>        countDownLatch.await();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure><p>在这段代码里面，通过案例可以发现有这些信息内容：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-type">UserService</span> <span class="hljs-variable">localRef</span> <span class="hljs-operator">=</span> referenceConfig.get();<br>localRef.echo(<span class="hljs-string">&quot;idea&quot;</span>);<br></code></pre></td></tr></table></figure><p>这两行语句是获取具体服务的核心之处，由于我在别处定义了一个叫做UserService 的公共服务接口，因此在服务引用的过程中可以进行转换。</p><h2 id="Dubbo2-7的三大新特新"><a href="#Dubbo2-7的三大新特新" class="headerlink" title="Dubbo2.7的三大新特新"></a>Dubbo2.7的三大新特新</h2><p>Dubbo的github官方地址为 <a target="_blank" rel="noopener" href="https://github.com/apache/dubbo">https://github.com/apache/dubbo</a></p><p><img src="https://www.javazhiyin.com/wp-content/uploads/2020/01/java9-1578536515.png" srcset="/img/loading.gif" lazyload alt="大白话带你梳理一下Dubbo的那些事儿" title="大白话带你梳理一下Dubbo的那些事儿">在这里插入图片描述</p><p>Dubbo 目前有如图所示的 5 个分支，其中 2.7.1-release 只是一个临时分支，忽略不计，对其他 4 个分支而言，我归纳了一下，分别有如下信息：</p><ul><li><p>2.5.x 近期已经通过投票，Dubbo 社区即将停止对其的维护。</p></li><li><p>2.6.x 为长期支持的版本，也是 Dubbo 贡献给 Apache 之前的版本，其包名前缀为：com.alibaba，JDK 版本对应 1.6。</p></li><li><p>3.x-dev 是前瞻性的版本，对 Dubbo 进行一些高级特性的补充，如支持 rx 特性。</p></li><li><p>master 为长期支持的版本，版本号为 2.7.x，也是 Dubbo 贡献给 Apache 的开发版本，其包名前缀为：org.apache，JDK 版本对应 1.8。</p></li></ul><h2 id="Dubbo-2-7-新特性"><a href="#Dubbo-2-7-新特性" class="headerlink" title="Dubbo 2.7 新特性"></a>Dubbo 2.7 新特性</h2><p>Dubbo 2.7.x 作为 Apache 的孵化版本，除了代码优化之外，还新增了许多重磅的新特性，本文将会介绍其中最典型的2个新特性：</p><ul><li><p><strong>异步化改造</strong></p></li><li><p><strong>三大中心改造</strong></p></li></ul><h3 id="异步化改造"><a href="#异步化改造" class="headerlink" title="异步化改造"></a>异步化改造</h3><p>1.异步化调用的方式，在Dubbo2.7版本里面提供了异步化调用的功能，相关案例代码如下所示：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@RestController</span><br><span class="hljs-meta">@RequestMapping(value = &quot;/test&quot;)</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">TestController</span> &#123;<br>    <span class="hljs-meta">@Reference(async = true)</span><br>    <span class="hljs-keyword">private</span> UserService userService;<br><br>    <span class="hljs-meta">@GetMapping(&quot;/testStr&quot;)</span><br>    <span class="hljs-keyword">public</span> String <span class="hljs-title function_">testStr</span><span class="hljs-params">(String param)</span>&#123;<br>        <span class="hljs-keyword">return</span> userService.testEcho(param);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure><p>但是通过这种异步发送的方式我们通常都是获取不到响应值的，所以这里的return为null。</p><p>如果在低于2.7版本的dubbo框架中希望获取到异步返回的响应值还是需要通过RPC上下文来提取信息。</p><p>代码案例如下所示：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@GetMapping(&quot;/futureGet&quot;)</span><br>   <span class="hljs-keyword">public</span> String <span class="hljs-title function_">futureGet</span><span class="hljs-params">(String param)</span> <span class="hljs-keyword">throws</span> ExecutionException, InterruptedException &#123;<br>       userService.testEcho(param);<br>       Future&lt;String&gt; future= RpcContext.getContext().getFuture();<br>       <span class="hljs-type">String</span> <span class="hljs-variable">result</span> <span class="hljs-operator">=</span> future.get();<br>       System.out.println(<span class="hljs-string">&quot;this is :&quot;</span>+result);<br>       <span class="hljs-keyword">return</span> result;<br>   &#125;<br></code></pre></td></tr></table></figure><p>通过RPC上下文的方式可以取到对应的响应值,但是这种方式需要有所等待，因此此时的效率会有所降低。假设我们将dubbo的版本提升到了2.7.1之后，通过使用CompletableFuture来进行接口优化的话，这部分的代码实现就会有所变化：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@author</span> idea</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@date</span> 2019/12/31</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@Version</span> V1.0</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">interface</span> <span class="hljs-title class_">DemoService</span> &#123;<br>      String <span class="hljs-title function_">sayHello</span><span class="hljs-params">(String name)</span> ;<br>      <span class="hljs-keyword">default</span> CompletableFuture&lt;String&gt; <span class="hljs-title function_">sayAsyncHello</span><span class="hljs-params">(String name)</span>&#123;<br>            <span class="hljs-keyword">return</span> CompletableFuture.completedFuture(sayHello(name));<br>      &#125;<br>&#125;<br></code></pre></td></tr></table></figure><p>调用方代码：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">package</span> com.sise.consumer.controller;<br><br><span class="hljs-keyword">import</span> com.sise.dubbo.service.DemoService;<br><span class="hljs-keyword">import</span> org.apache.dubbo.config.annotation.Reference;<br><span class="hljs-keyword">import</span> org.springframework.web.bind.annotation.RequestMapping;<br><span class="hljs-keyword">import</span> org.springframework.web.bind.annotation.RestController;<br><span class="hljs-keyword">import</span> java.util.concurrent.CompletableFuture;<br><span class="hljs-keyword">import</span> java.util.concurrent.atomic.AtomicReference;<br><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@author</span> idea</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@date</span> 2019/12/31</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@Version</span> V1.0</span><br><span class="hljs-comment"> */</span><br><span class="hljs-meta">@RestController</span><br><span class="hljs-meta">@RequestMapping(value = &quot;/demo&quot;)</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">DemoController</span> &#123;<br><br>    <span class="hljs-meta">@Reference</span><br>    <span class="hljs-keyword">private</span> DemoService demoService;<br><br>    <span class="hljs-meta">@RequestMapping(value = &quot;/testDemo&quot;)</span><br>    <span class="hljs-keyword">public</span> String <span class="hljs-title function_">testDemo</span><span class="hljs-params">(String name)</span>&#123;<br>        System.out.println(<span class="hljs-string">&quot;【testDemo】 this is :&quot;</span>+name);<br>        <span class="hljs-keyword">return</span> demoService.sayHello(name);<br>    &#125;.<br><br>    <span class="hljs-meta">@RequestMapping(value = &quot;/testAsyncDemo&quot;)</span><br>    <span class="hljs-keyword">public</span> String <span class="hljs-title function_">testAsyncDemo</span><span class="hljs-params">(String name)</span>&#123;<br>        System.out.println(<span class="hljs-string">&quot;【testAsyncDemo】 this is :&quot;</span>+name);<br>        CompletableFuture&lt;String&gt; future = demoService.sayAsyncHello(name);<br>        AtomicReference&lt;String&gt; result = <span class="hljs-literal">null</span>;<br>        <span class="hljs-comment">//通过一条callback线程来处理响应的数据信息</span><br>        future.whenComplete((retValue,exception)-&gt;&#123;<br>           <span class="hljs-keyword">if</span>(exception==<span class="hljs-literal">null</span>)&#123;<br>               System.out.println(retValue);<br>               result.set(retValue);<br>           &#125; <span class="hljs-keyword">else</span> &#123;<br>               exception.printStackTrace();<br>           &#125;<br>        &#125;);<br>        <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;通过一条callback线程来处理响应的数据信息,所以这个时候获取不到信息响应&quot;</span>;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure><p>这样的调用是借助了callback线程来帮我们处理原先的数据内容，关于dubbo里面的异步化调用，我借用了官方的一张图来进行展示：</p><p><img src="https://www.javazhiyin.com/wp-content/uploads/2020/01/java7-1578536515.png" srcset="/img/loading.gif" lazyload alt="大白话带你梳理一下Dubbo的那些事儿" title="大白话带你梳理一下Dubbo的那些事儿"></p><p>我们上边讲解的众多方法都只是针对于dubbo的客户端异步化，并没有讲解关于服务端的异步化处理，这是因为结合dubbo的业务线程池模型来思考，服务端的异步化处理比较鸡肋（因为dubbo内部服务端的线程池本身就是异步化调用的了）。</p><p>当然dubbo 2.6 里面对于接口异步化调用的配置到了2.7版本依旧有效。</p><h3 id="三大中心的改造"><a href="#三大中心的改造" class="headerlink" title="三大中心的改造"></a>三大中心的改造</h3><p><strong>注册中心</strong></p><p>在dubbo2.7之前，dubbo主要还是由consumer，provider ，register组成，然而在2.7版本之后，dubbo的注册中心被拆解为了三个中心，分别是原先的<strong>注册中心</strong>和<strong>元数据中心</strong>以及<strong>配置中心</strong>。</p><p><strong>元数据配置</strong></p><p>在dubbo2.7版本中，将原先注册在zk上边的过多数据进行了注册拆分，这样能够保证减少对于zk端的压力。具体配置如下：</p><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">dubbo:registry</span> <span class="hljs-attr">address</span>=<span class="hljs-string">“zookeeper://127.0.0.1:2181”</span> <span class="hljs-attr">simplified</span>=<span class="hljs-string">&quot;true&quot;</span>/&gt;</span><br></code></pre></td></tr></table></figure><p>简化了相应配置之后，dubbo也只会上传一些必要的服务治理数据了，简化版本的服务数据只剩下下边这些信息：</p><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs xml">dubbo://30.5.120.185:20880/com.sise.TestService?<br>application=test-provider&amp;<br>dubbo=2.0.2&amp;<br>release=2.7.0&amp;<br>timestamp=1554982201973<br></code></pre></td></tr></table></figure><p>对于其他的元数据信息将会被存储到一些元数据中心里面，例如说redis，nacos，zk等</p><p>元数据配置改造主要解决的问题是：推送量大 -&gt; 存储数据量大 -&gt; 网络传输量大 -&gt; 延迟严重</p><h2 id="配置中心"><a href="#配置中心" class="headerlink" title="配置中心"></a>配置中心</h2><p>dubbo2.7开始支持多种分布式配置中心的组件。例如说：zk，Spring Cloud Config, Apollo, Nacos，关于这部分的配置网上的资料也比较多，我就不在这里细说了。</p><p><strong>END</strong></p></div><hr><div><div class="post-metas my-3"><div class="post-meta"><i class="iconfont icon-tags"></i> <a href="/tags/Dubbo/">#Dubbo</a></div></div><div class="license-box my-3"><div class="license-title"><div>大白话带你梳理一下Dubbo的那些事儿</div><div>https://kanchai.club/2022/12/10/大白话带你梳理一下Dubbo的那些事儿/</div></div><div class="license-meta"><div class="license-meta-item"><div>作者</div><div>625</div></div><div class="license-meta-item license-meta-date"><div>发布于</div><div>2022年12月10日</div></div><div class="license-meta-item"><div>许可协议</div><div><a target="_blank" href="https://creativecommons.org/licenses/by/4.0/"><span class="hint--top hint--rounded" aria-label="BY - 署名"><i class="iconfont icon-by"></i></span></a></div></div></div><div class="license-icon iconfont"></div></div><div class="post-prevnext my-3"><article class="post-prev col-6"><a href="/2022/12/10/%E5%AF%BC%E8%88%AA%E6%8E%A5%E5%8F%A3%E8%B0%83%E7%94%A8/"><i class="iconfont icon-arrowleft"></i> <span class="hidden-mobile"></span> <span class="visible-mobile">上一篇</span></a></article><article class="post-next col-6"><a href="/2022/12/10/%E5%AD%A6%E4%B9%A0spring%20cloud%20bus%20%E4%BD%BF%E7%94%A8%EF%BC%8C%E8%87%AA%E5%AE%9A%E4%B9%89BUS%E4%BA%8B%E4%BB%B6/" title="SpringCloud bus 使用介绍"><span class="hidden-mobile">SpringCloud bus 使用介绍</span> <span class="visible-mobile">下一篇</span> <i class="iconfont icon-arrowright"></i></a></article></div></div><article id="comments" lazyload><div id="giscus" class="giscus"></div><script type="text/javascript">Fluid.utils.loadComments("#giscus",(function(){var t={repo:"stupdit1t/625","repo-id":"MDEwOlJlcG9zaXRvcnkyNDQ3ODMzOTM=",category:"General","category-id":"DIC_kwDODpcZIc4CSeTH","theme-light":"light","theme-dark":"dark",mapping:"pathname","reactions-enabled":1,"emit-metadata":0,"input-position":"top",lang:"zh-CN","//mapping":"title"},e={};for(let i in t){if(!i.startsWith("theme-"))e[i.startsWith("data-")?i:"data-"+i]=t[i]}window.GiscusThemeLight="light",window.GiscusThemeDark="dark",e["data-theme"]="dark"===document.documentElement.getAttribute("data-user-color-scheme")?"dark":"light";for(let t in e){var i=e[t];null!=i&&""!==i||delete e[t]}var a=document.createElement("script");a.setAttribute("src","https://giscus.app/client.js"),a.setAttribute("crossorigin","anonymous");for(let t in e)a.setAttribute(t,e[t]);var n=document.getElementsByTagName("script"),r=n.length>0?n[n.length-1]:document.head||document.documentElement;r.parentNode.insertBefore(a,r.nextSibling)}))</script><noscript>Please enable JavaScript to view the comments</noscript></article></article></div></div></div><div class="side-col d-none d-lg-block col-lg-2"><aside class="sidebar" style="margin-left:-1rem"><div id="toc"><p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p><div class="toc-body" id="toc-body"></div></div></aside></div></div></div><a id="scroll-top-button" aria-label="TOP" href="#" role="button"><i class="iconfont icon-arrowup" aria-hidden="true"></i></a><div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable modal-lg" role="document"><div class="modal-content"><div class="modal-header text-center"><h4 class="modal-title w-100 font-weight-bold">搜索</h4><button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body mx-3"><div class="md-form mb-5"><input type="text" id="local-search-input" class="form-control validate"> <label data-error="x" data-success="v" for="local-search-input">关键词</label></div><div class="list-group" id="local-search-result"></div></div></div></div></div></main><footer><div class="footer-inner"><div class="footer-content"><a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/stupdit1t" target="_blank" rel="nofollow noopener"><span>625</span></a></div><div class="statistics"><span id="busuanzi_container_site_pv" style="display:none">总访问量 <span id="busuanzi_value_site_pv"></span> 次 </span><span id="busuanzi_container_site_uv" style="display:none">总访客数 <span id="busuanzi_value_site_uv"></span> 人</span></div></div></footer><script src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js"></script><link rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css"><script>NProgress.configure({showSpinner:!1,trickleSpeed:100}),NProgress.start(),window.addEventListener("load",(function(){NProgress.done()}))</script><script src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js"></script><script src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js"></script><script src="/js/events.js"></script><script src="/js/plugins.js"></script><script src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js"></script><script>!function(t,e){var i=Fluid.plugins.typing,n=e.getElementById("subtitle");n&&i&&i(n.getAttribute("data-typed-text"))}(window,document)</script><script src="/js/img-lazyload.js"></script><script>Fluid.utils.createScript("https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js",(function(){var t=jQuery("#toc");if(0!==t.length&&window.tocbot){var i=jQuery("#board-ctn").offset().top;window.tocbot.init(Object.assign({tocSelector:"#toc-body",contentSelector:".markdown-body",linkClass:"tocbot-link",activeLinkClass:"tocbot-active-link",listClass:"tocbot-list",isCollapsedClass:"tocbot-is-collapsed",collapsibleClass:"tocbot-is-collapsible",scrollSmooth:!0,includeTitleTags:!0,headingsOffset:-i},CONFIG.toc)),t.find(".toc-list-item").length>0&&t.css("visibility","visible"),Fluid.events.registerRefreshCallback((function(){if("tocbot"in window){tocbot.refresh();var t=jQuery("#toc");if(0===t.length||!tocbot)return;t.find(".toc-list-item").length>0&&t.css("visibility","visible")}}))}}))</script><script src="https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js"></script><script>Fluid.plugins.codeWidget()</script><script>Fluid.utils.createScript("https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js",(function(){window.anchors.options={placement:CONFIG.anchorjs.placement,visible:CONFIG.anchorjs.visible},CONFIG.anchorjs.icon&&(window.anchors.options.icon=CONFIG.anchorjs.icon);var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(window.anchors.options.class="anchorjs-link-left"),window.anchors.add(o.join(", ")),Fluid.events.registerRefreshCallback((function(){if("anchors"in window){anchors.removeAll();var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(anchors.options.class="anchorjs-link-left"),anchors.add(o.join(", "))}}))}))</script><script>Fluid.utils.createScript("https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js",(function(){Fluid.plugins.fancyBox()}))</script><script>Fluid.plugins.imageCaption()</script><script src="/js/local-search.js"></script><script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script src="/js/boot.js"></script><noscript><div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div></noscript></body></html>
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="625">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="首先声明，本文并不是什么代码实战类型的文章，适合于想对dubbo有更加全面认识的读者阅读，文章不会过于深奥，只是将一系列的知识点串通起来，帮助读者温故而知新。 RPC服务的介绍相信有过一些分布式开发经历的读者都有用过一些RPC框架，通过框架包装好之后提供的API接口调用远程服务，体验感觉起来就和调用本地服务一样轻松。这么方便好用的技术框架，在实际的开发过程中是如何包装的呢? 很早的时候，国外的工程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="大白话带你梳理一下Dubbo的那些事儿">
+<meta property="og:url" content="https://kanchai.club/2022/12/10/%E5%A4%A7%E7%99%BD%E8%AF%9D%E5%B8%A6%E4%BD%A0%E6%A2%B3%E7%90%86%E4%B8%80%E4%B8%8BDubbo%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/index.html">
+<meta property="og:site_name" content="625">
+<meta property="og:description" content="首先声明，本文并不是什么代码实战类型的文章，适合于想对dubbo有更加全面认识的读者阅读，文章不会过于深奥，只是将一系列的知识点串通起来，帮助读者温故而知新。 RPC服务的介绍相信有过一些分布式开发经历的读者都有用过一些RPC框架，通过框架包装好之后提供的API接口调用远程服务，体验感觉起来就和调用本地服务一样轻松。这么方便好用的技术框架，在实际的开发过程中是如何包装的呢? 很早的时候，国外的工程">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://www.javazhiyin.com/wp-content/uploads/2020/01/java1-1578536515.png">
+<meta property="og:image" content="https://www.javazhiyin.com/wp-content/uploads/2020/01/java9-1578536515.png">
+<meta property="og:image" content="https://www.javazhiyin.com/wp-content/uploads/2020/01/java7-1578536515.png">
+<meta property="article:published_time" content="2022-12-10T08:53:33.532Z">
+<meta property="article:modified_time" content="2022-12-10T08:53:33.532Z">
+<meta property="article:author" content="625">
+<meta property="article:tag" content="Dubbo">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://www.javazhiyin.com/wp-content/uploads/2020/01/java1-1578536515.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>大白话带你梳理一下Dubbo的那些事儿 - 625</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"kanchai.club","root":"/","version":"1.9.3","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":"8b23e0bc706b35d094ee08fd97ebfbed","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+    <!-- Baidu Analytics -->
+    <script async>
+      if (!Fluid.ctx.dnt) {
+        var _hmt = _hmt || [];
+        (function() {
+          var hm = document.createElement("script");
+          hm.src = "https://hm.baidu.com/hm.js?8b23e0bc706b35d094ee08fd97ebfbed";
+          var s = document.getElementsByTagName("script")[0];
+          s.parentNode.insertBefore(hm, s);
+        })();
+      }
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>625</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="大白话带你梳理一下Dubbo的那些事儿"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-author" aria-hidden="true"></i>
+        625
+      </span>
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-12-10 16:53" pubdate>
+          2022年12月10日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          9.8k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          82 分钟
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="busuanzi_container_page_pv" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="busuanzi_value_page_pv"></span> 次
+        </span>
+        
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">大白话带你梳理一下Dubbo的那些事儿</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p><em>首先声明，本文并不是什么代码实战类型的文章，适合于想对dubbo有更加全面认识的读者阅读，文章不会过于深奥，只是将一系列的知识点串通起来，帮助读者温故而知新。</em></p>
+<h2 id="RPC服务的介绍"><a href="#RPC服务的介绍" class="headerlink" title="RPC服务的介绍"></a>RPC服务的介绍</h2><p>相信有过一些分布式开发经历的读者都有用过一些RPC框架，通过框架包装好之后提供的API接口调用远程服务，体验感觉起来就和调用本地服务一样轻松。<strong>这么方便好用的技术框架，在实际的开发过程中是如何包装的呢?</strong></p>
+<p>很早的时候，国外的工程师设计了一种能够通过A计算机调用B计算机上边应用程序的技术，这种技术不需要开发人员对于网络通讯了解过多，并且调用其他机器上边程序的时候和调用本地的程序一样方便好用。</p>
+<p>A机器发起请求去调用B机器程序的时候会被挂起，B机器接收到A机器发起的请求参数之后会做一定的参数转换，最后将对应的程序结果返回给A，这就是最原始的RPC服务调用了。</p>
+<h2 id="RPC调用的优势"><a href="#RPC调用的优势" class="headerlink" title="RPC调用的优势"></a>RPC调用的优势</h2><h3 id="简单"><a href="#简单" class="headerlink" title="简单"></a>简单</h3><p><strong>不需要开发者对于网络通信做过多的设置</strong>，例如我们在使用http协议进行远程接口调用的时候，总是会需要编写较多的http协议参数（header，context，Accept-Language,Accept-Encode等等），这些处理对于开发人员来说，实际上都并不是特别友好。但是RPC服务调用框架通常都将这类解析进行了对应的封装，大大降低了开发人员的使用难度。</p>
+<h3 id="高效"><a href="#高效" class="headerlink" title="高效"></a>高效</h3><p>在网络传输方面，RPC更多是处于应用层和传输层之间。这里我们需要先理清楚一个问题，网络分层。RPC是处于会话层的部分，相比处于应用层的HTTP而言，<strong>RPC要比Rest服务调用更加轻便。</strong></p>
+<h2 id="常见的远程调用技术"><a href="#常见的远程调用技术" class="headerlink" title="常见的远程调用技术"></a>常见的远程调用技术</h2><h3 id="rmi"><a href="#rmi" class="headerlink" title="rmi"></a>rmi</h3><p>利用java.rmi包实现，<strong>基于Java远程方法协议(Java Remote Method Protocol) 和java的原生序列化</strong>。</p>
+<h3 id="Hessian"><a href="#Hessian" class="headerlink" title="Hessian"></a>Hessian</h3><p><strong>是一个轻量级的remoting onhttp工具</strong>，使用简单的方法提供了RMI的功能。基于HTTP协议，采用二进制编解码。</p>
+<h3 id="protobuf-rpc-pro"><a href="#protobuf-rpc-pro" class="headerlink" title="protobuf-rpc-pro"></a>protobuf-rpc-pro</h3><p><strong>是一个Java类库</strong>，提供了基于 Google 的 Protocol Buffers 协议的远程方法调用的框架。基于 Netty 底层的 NIO 技术。支持 TCP 重用&#x2F; keep-alive、SSL加密、RPC 调用取消操作、嵌入式日志等功能。</p>
+<h3 id="Thrift"><a href="#Thrift" class="headerlink" title="Thrift"></a>Thrift</h3><p><strong>是一种可伸缩的跨语言服务的软件框架</strong>。它拥有功能强大的代码生成引擎，无缝地支持C + +，C#，Java，Python和PHP和Ruby。thrift允许你定义一个描述文件，描述数据类型和服务接口。依据该文件，编译器方便地生成RPC客户端和服务器通信代码。</p>
+<p>最初由facebook开发用做系统内部语言之间的RPC通信，2007年由facebook贡献到apache基金 ，现在是apache下的opensource之一 。支持多种语言之间的RPC方式的通信：php语言client可以构造一个对象，调用相应的服务方法来调用java语言的服务，跨越语言的C&#x2F;S RPC调用。底层通讯基于SOCKET。</p>
+<h3 id="Avro"><a href="#Avro" class="headerlink" title="Avro"></a>Avro</h3><p><strong>出自Hadoop之父Doug Cutting</strong>, 在Thrift已经相当流行的情况下推出Avro的目标不仅是提供一套类似Thrift的通讯中间件,更是要建立一个新的，标准性的云计算的数据交换和存储的Protocol。支持HTTP，TCP两种协议。</p>
+<h3 id="Dubbo"><a href="#Dubbo" class="headerlink" title="Dubbo"></a>Dubbo</h3><p><strong>Dubbo是 阿里巴巴公司开源的一个高性能优秀的服务框架****，使得应用可通过高性能的 RPC 实现服务的输出和输入功能，可以和 Spring框架无缝集成。</strong></p>
+<p>上边我们说到了RPC的远程调用发展历史，那么下边我们一起来深入探讨一下RPC的服务。</p>
+<p>首先我们来看看OSI的网络协议内容。</p>
+<h2 id="OSI的七层网络模型"><a href="#OSI的七层网络模型" class="headerlink" title="OSI的七层网络模型"></a>OSI的七层网络模型</h2><p>对于OSI的七层网络模型我绘制了下边的这么一张图：  </p>
+<p><img src="https://www.javazhiyin.com/wp-content/uploads/2020/01/java1-1578536515.png" srcset="/img/loading.gif" lazyload alt="大白话带你梳理一下Dubbo的那些事儿" title="大白话带你梳理一下Dubbo的那些事儿">  </p>
+<p><strong>下边是我个人对于这七层协议的理解：</strong></p>
+<ul>
+<li><p><strong>应用层</strong> 主要是对于服务接口的格式多定义，例如提供一定的终端接口暴露给外部应用调用。</p>
+</li>
+<li><p><strong>表示层</strong> 处理一些数据传输的格式转换，例如说编码的统一，加密和解密处理。</p>
+</li>
+<li><p><strong>会话层</strong> 管理用户的会话和对话，建立不同机器之间的会话连接。</p>
+</li>
+<li><p><strong>传输层</strong> 向网络层提供可靠有序的数据包信息。</p>
+</li>
+<li><p><strong>网络层</strong> 真正发送数据包信息的层面，提供流和拥塞控制，从而降低网络的资源损耗。</p>
+</li>
+<li><p><strong>数据链路层</strong> 封装对应的数据包，检测和纠正数据包传输信息。</p>
+</li>
+<li><p><strong>物理层</strong> 通过网络通讯设备发送数据</p>
+</li>
+</ul>
+<h2 id="HTTP-amp-RPC"><a href="#HTTP-amp-RPC" class="headerlink" title="HTTP &amp; RPC"></a>HTTP &amp; RPC</h2><p>HTTP主要是位于TCP&#x2F;IP协议栈的应用层部分，首先需要构建三次握手的链接，接着才能进行数据信息的请求发送，最后进行四次挥手断开链接。</p>
+<p>RPC在请求的过程中跨越了传输层和应用层，这是因为它本身是依赖于Socket的原因。（再深入的原因我也不知道）。减少了上边几层的封装，RPC的请求效率自然是要比HTTP高效很多。</p>
+<p><strong>那么一个完整的RPC调用应该包含哪些部分呢？</strong></p>
+<p>通常我们将一个完整的RPC架构分为了以下几个核心组件：</p>
+<ul>
+<li><p>Server</p>
+</li>
+<li><p>Client</p>
+</li>
+<li><p>Server Stub</p>
+</li>
+<li><p>Client Stub</p>
+</li>
+</ul>
+<p>这四个模块中我稍微说下stub吧。这个单词翻译过来称之为存根。</p>
+<p>**Client Stub **就是将客户端请求的参数，服务名称，服务地址进行打包，统一发送给server方。</p>
+<p>**Server Stub **我用通俗易懂的语言来解释就是服务端接收到Client发送的数据之后进行消息解包，调用本地方法。（看过netty拆包机制应该会对这块比较了解）。</p>
+<h2 id="Dubbo的核心属性"><a href="#Dubbo的核心属性" class="headerlink" title="Dubbo的核心属性"></a>Dubbo的核心属性</h2><p>其实Dubbo配置里面的核心内容就是 _<strong>服务暴露，服务发现，服务治理</strong>_。</p>
+<h3 id="什么是服务暴露，服务发现，服务治理？"><a href="#什么是服务暴露，服务发现，服务治理？" class="headerlink" title="什么是服务暴露，服务发现，服务治理？"></a>什么是服务暴露，服务发现，服务治理？</h3><p>下边我们用一段xml的配置来进行讲解：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-meta">&lt;?xml version=<span class="hljs-string">&quot;1.0&quot;</span> encoding=<span class="hljs-string">&quot;UTF-8&quot;</span>?&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">beans</span> <span class="hljs-attr">xmlns:xsi</span>=<span class="hljs-string">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span></span><br><span class="hljs-tag">       <span class="hljs-attr">xmlns:dubbo</span>=<span class="hljs-string">&quot;http://code.alibabatech.com/schema/dubbo&quot;</span></span><br><span class="hljs-tag">       <span class="hljs-attr">xmlns</span>=<span class="hljs-string">&quot;http://www.springframework.org/schema/beans&quot;</span></span><br><span class="hljs-tag">       <span class="hljs-attr">xsi:schemaLocation</span>=<span class="hljs-string">&quot;http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd</span></span><br><span class="hljs-string"><span class="hljs-tag">    http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd&quot;</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">dubbo:application</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;dubbo-invoker-provider&quot;</span>&gt;</span><br>        <span class="hljs-tag">&lt;<span class="hljs-name">dubbo:parameter</span> <span class="hljs-attr">key</span>=<span class="hljs-string">&quot;qos.port&quot;</span> <span class="hljs-attr">value</span>=<span class="hljs-string">&quot;22222&quot;</span>/&gt;</span><br>    <span class="hljs-tag">&lt;/<span class="hljs-name">dubbo:application</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">dubbo:registry</span> <span class="hljs-attr">address</span>=<span class="hljs-string">&quot;zookeeper://127.0.0.1:2181&quot;</span>/&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">dubbo:protocol</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;dubbo&quot;</span> <span class="hljs-attr">port</span>=<span class="hljs-string">&quot;20880&quot;</span>/&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">bean</span> <span class="hljs-attr">id</span>=<span class="hljs-string">&quot;userService&quot;</span> <span class="hljs-attr">class</span>=<span class="hljs-string">&quot;com.sise.user.service.UserServiceImpl&quot;</span> /&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">dubbo:service</span> <span class="hljs-attr">interface</span>=<span class="hljs-string">&quot;com.sise.user.service.UserService&quot;</span> <span class="hljs-attr">ref</span>=<span class="hljs-string">&quot;userService&quot;</span> /&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">beans</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+<p>在dubbo的配置文件里面，通常我们所说的<strong>dubbo:service</strong> 可以理解为服务暴露，<strong>dubbo:refernce</strong> 为服务发现，<strong>mock</strong>是服务治理，<strong>timeout</strong>属于服务治理的一种（性能调优）.</p>
+<p>假设dubbo里面希望将一些公共的配置抽取出来，我们可以通过properties文件进行配置，dubbo在加载配置文件的优先顺序如下：</p>
+<ol>
+<li><p>优先会读取JVM -D启动参数后边的内容</p>
+</li>
+<li><p>读取xml配置文件</p>
+</li>
+<li><p>读取properties配置文件内容</p>
+</li>
+</ol>
+<p>dubbo默认会读取dubbo.properties配置文件的信息，例如下边这种配置：</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-attr">dubbo.application.name</span>=dubbo-user-service<br><span class="hljs-attr">dubbo.registry.address</span>=zookeeper://<span class="hljs-number">127.0</span>.<span class="hljs-number">0.1</span>:<span class="hljs-number">2181</span><br></code></pre></td></tr></table></figure>
+
+<p>假设我们的dubbo配置文件不命名为dubbo.properties（假设命名为了my-dubbo.properties）的时候，可以在启动参数的后边加上这么一段指令：</p>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs applescript">-Ddubbo.properties.<span class="hljs-built_in">file</span>=<span class="hljs-keyword">my</span>-dubbo.properties<br></code></pre></td></tr></table></figure>
+
+<p>那么在应用程序启动之后，对应的工程就会读取指定的配置文件，这样就可以将一些共用的dubbo配置给抽取了出来。</p>
+<h2 id="XML和配置类的映射"><a href="#XML和配置类的映射" class="headerlink" title="XML和配置类的映射"></a>XML和配置类的映射</h2><p>在工作中，我们通常都会通过配置xml的方式来设定一个服务端暴露的服务接口和消费端需要调用的服务信息，这些配置的xml实际上在dubbo的源码中都会被解析为对应的实体类对象。</p>
+<p>例如说我们常用到的reference配置类，下边我贴出一段代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">package</span> com.sise.user.config;<br><span class="hljs-keyword">import</span> com.sise.user.service.UserService;<br><span class="hljs-keyword">import</span> com.sise.user.service.UserServiceImpl;<br><span class="hljs-keyword">import</span> org.apache.dubbo.config.*;<br><span class="hljs-keyword">import</span> java.io.IOException;<br><span class="hljs-keyword">import</span> java.util.concurrent.CountDownLatch;<br><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * dubbo里面的自定义配置类</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@author</span> idea</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@data</span> 2019/12/29</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">DubboSelfDefConfig</span> &#123;<br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * dubbo的服务暴露</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">server</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-type">ApplicationConfig</span> <span class="hljs-variable">applicationConfig</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">ApplicationConfig</span>();<br>        applicationConfig.setName(<span class="hljs-string">&quot;dubbo-server-config&quot;</span>);<br>        <span class="hljs-type">RegistryConfig</span> <span class="hljs-variable">registryConfig</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">RegistryConfig</span>();<br>        registryConfig.setAddress(<span class="hljs-string">&quot;zookeeper://127.0.0.1:2181&quot;</span>);<br>        <span class="hljs-type">ProtocolConfig</span> <span class="hljs-variable">protocolConfig</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">ProtocolConfig</span>();<br>        protocolConfig.setName(<span class="hljs-string">&quot;dubbo&quot;</span>);<br>        protocolConfig.setPort(<span class="hljs-number">20880</span>);<br>        protocolConfig.setThreads(<span class="hljs-number">200</span>);<br>        <span class="hljs-type">UserService</span> <span class="hljs-variable">userService</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">UserServiceImpl</span>();<br>        ServiceConfig&lt;UserService&gt; serviceConfig = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ServiceConfig</span>&lt;&gt;();<br>        serviceConfig.setApplication(applicationConfig);<br>        serviceConfig.setRegistry(registryConfig);<br>        serviceConfig.setProtocol(protocolConfig);<br>        serviceConfig.setInterface(UserService.class);<br>        serviceConfig.setRef(userService);<br>        serviceConfig.export();<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">consumer</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-type">ApplicationConfig</span> <span class="hljs-variable">applicationConfig</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">ApplicationConfig</span>();<br>        applicationConfig.setName(<span class="hljs-string">&quot;dubbo-client-config&quot;</span>);<br>        <span class="hljs-type">RegistryConfig</span> <span class="hljs-variable">registryConfig</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">RegistryConfig</span>();<br>        registryConfig.setAddress(<span class="hljs-string">&quot;zookeeper://127.0.0.1:2181&quot;</span>);<br>        ReferenceConfig&lt;UserService&gt; referenceConfig = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ReferenceConfig</span>&lt;&gt;();<br>        referenceConfig.setApplication(applicationConfig);<br>        referenceConfig.setRegistry(registryConfig);<br>        referenceConfig.setInterface(UserService.class);<br>        <span class="hljs-type">UserService</span> <span class="hljs-variable">localRef</span> <span class="hljs-operator">=</span> referenceConfig.get();<br>        localRef.echo(<span class="hljs-string">&quot;idea&quot;</span>);<br>    &#125;<br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> <span class="hljs-keyword">throws</span> InterruptedException, IOException &#123;<br>        <span class="hljs-type">DubboSelfDefConfig</span> <span class="hljs-variable">d</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">DubboSelfDefConfig</span>();<br>        d.consumer();<br>        <span class="hljs-type">CountDownLatch</span> <span class="hljs-variable">countDownLatch</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">CountDownLatch</span>(<span class="hljs-number">1</span>);<br>        countDownLatch.await();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>在这段代码里面，通过案例可以发现有这些信息内容：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-type">UserService</span> <span class="hljs-variable">localRef</span> <span class="hljs-operator">=</span> referenceConfig.get();<br>localRef.echo(<span class="hljs-string">&quot;idea&quot;</span>);<br></code></pre></td></tr></table></figure>
+<p>这两行语句是获取具体服务的核心之处，由于我在别处定义了一个叫做UserService 的公共服务接口，因此在服务引用的过程中可以进行转换。</p>
+<h2 id="Dubbo2-7的三大新特新"><a href="#Dubbo2-7的三大新特新" class="headerlink" title="Dubbo2.7的三大新特新"></a>Dubbo2.7的三大新特新</h2><p>Dubbo的github官方地址为 <a target="_blank" rel="noopener" href="https://github.com/apache/dubbo">https://github.com/apache/dubbo</a>  </p>
+<p><img src="https://www.javazhiyin.com/wp-content/uploads/2020/01/java9-1578536515.png" srcset="/img/loading.gif" lazyload alt="大白话带你梳理一下Dubbo的那些事儿" title="大白话带你梳理一下Dubbo的那些事儿">在这里插入图片描述</p>
+<p>Dubbo 目前有如图所示的 5 个分支，其中 2.7.1-release 只是一个临时分支，忽略不计，对其他 4 个分支而言，我归纳了一下，分别有如下信息：</p>
+<ul>
+<li><p>2.5.x 近期已经通过投票，Dubbo 社区即将停止对其的维护。</p>
+</li>
+<li><p>2.6.x 为长期支持的版本，也是 Dubbo 贡献给 Apache 之前的版本，其包名前缀为：com.alibaba，JDK 版本对应 1.6。</p>
+</li>
+<li><p>3.x-dev 是前瞻性的版本，对 Dubbo 进行一些高级特性的补充，如支持 rx 特性。</p>
+</li>
+<li><p>master 为长期支持的版本，版本号为 2.7.x，也是 Dubbo 贡献给 Apache 的开发版本，其包名前缀为：org.apache，JDK 版本对应 1.8。</p>
+</li>
+</ul>
+<h2 id="Dubbo-2-7-新特性"><a href="#Dubbo-2-7-新特性" class="headerlink" title="Dubbo 2.7 新特性"></a>Dubbo 2.7 新特性</h2><p>Dubbo 2.7.x 作为 Apache 的孵化版本，除了代码优化之外，还新增了许多重磅的新特性，本文将会介绍其中最典型的2个新特性：</p>
+<ul>
+<li><p><strong>异步化改造</strong></p>
+</li>
+<li><p><strong>三大中心改造</strong></p>
+</li>
+</ul>
+<h3 id="异步化改造"><a href="#异步化改造" class="headerlink" title="异步化改造"></a>异步化改造</h3><p>1.异步化调用的方式，在Dubbo2.7版本里面提供了异步化调用的功能，相关案例代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@RestController</span><br><span class="hljs-meta">@RequestMapping(value = &quot;/test&quot;)</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">TestController</span> &#123;<br>    <span class="hljs-meta">@Reference(async = true)</span><br>    <span class="hljs-keyword">private</span> UserService userService;<br><br>    <span class="hljs-meta">@GetMapping(&quot;/testStr&quot;)</span><br>    <span class="hljs-keyword">public</span> String <span class="hljs-title function_">testStr</span><span class="hljs-params">(String param)</span>&#123;<br>        <span class="hljs-keyword">return</span> userService.testEcho(param);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>但是通过这种异步发送的方式我们通常都是获取不到响应值的，所以这里的return为null。</p>
+<p>如果在低于2.7版本的dubbo框架中希望获取到异步返回的响应值还是需要通过RPC上下文来提取信息。</p>
+<p>代码案例如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@GetMapping(&quot;/futureGet&quot;)</span><br>   <span class="hljs-keyword">public</span> String <span class="hljs-title function_">futureGet</span><span class="hljs-params">(String param)</span> <span class="hljs-keyword">throws</span> ExecutionException, InterruptedException &#123;<br>       userService.testEcho(param);<br>       Future&lt;String&gt; future= RpcContext.getContext().getFuture();<br>       <span class="hljs-type">String</span> <span class="hljs-variable">result</span> <span class="hljs-operator">=</span> future.get();<br>       System.out.println(<span class="hljs-string">&quot;this is :&quot;</span>+result);<br>       <span class="hljs-keyword">return</span> result;<br>   &#125;<br></code></pre></td></tr></table></figure>
+
+<p>通过RPC上下文的方式可以取到对应的响应值,但是这种方式需要有所等待，因此此时的效率会有所降低。假设我们将dubbo的版本提升到了2.7.1之后，通过使用CompletableFuture来进行接口优化的话，这部分的代码实现就会有所变化：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@author</span> idea</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@date</span> 2019/12/31</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@Version</span> V1.0</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">interface</span> <span class="hljs-title class_">DemoService</span> &#123;<br>      String <span class="hljs-title function_">sayHello</span><span class="hljs-params">(String name)</span> ;<br>      <span class="hljs-keyword">default</span> CompletableFuture&lt;String&gt; <span class="hljs-title function_">sayAsyncHello</span><span class="hljs-params">(String name)</span>&#123;<br>            <span class="hljs-keyword">return</span> CompletableFuture.completedFuture(sayHello(name));<br>      &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>调用方代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">package</span> com.sise.consumer.controller;<br><br><span class="hljs-keyword">import</span> com.sise.dubbo.service.DemoService;<br><span class="hljs-keyword">import</span> org.apache.dubbo.config.annotation.Reference;<br><span class="hljs-keyword">import</span> org.springframework.web.bind.annotation.RequestMapping;<br><span class="hljs-keyword">import</span> org.springframework.web.bind.annotation.RestController;<br><span class="hljs-keyword">import</span> java.util.concurrent.CompletableFuture;<br><span class="hljs-keyword">import</span> java.util.concurrent.atomic.AtomicReference;<br><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@author</span> idea</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@date</span> 2019/12/31</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@Version</span> V1.0</span><br><span class="hljs-comment"> */</span><br><span class="hljs-meta">@RestController</span><br><span class="hljs-meta">@RequestMapping(value = &quot;/demo&quot;)</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">DemoController</span> &#123;<br><br>    <span class="hljs-meta">@Reference</span><br>    <span class="hljs-keyword">private</span> DemoService demoService;<br><br>    <span class="hljs-meta">@RequestMapping(value = &quot;/testDemo&quot;)</span><br>    <span class="hljs-keyword">public</span> String <span class="hljs-title function_">testDemo</span><span class="hljs-params">(String name)</span>&#123;<br>        System.out.println(<span class="hljs-string">&quot;【testDemo】 this is :&quot;</span>+name);<br>        <span class="hljs-keyword">return</span> demoService.sayHello(name);<br>    &#125;.<br><br>    <span class="hljs-meta">@RequestMapping(value = &quot;/testAsyncDemo&quot;)</span><br>    <span class="hljs-keyword">public</span> String <span class="hljs-title function_">testAsyncDemo</span><span class="hljs-params">(String name)</span>&#123;<br>        System.out.println(<span class="hljs-string">&quot;【testAsyncDemo】 this is :&quot;</span>+name);<br>        CompletableFuture&lt;String&gt; future = demoService.sayAsyncHello(name);<br>        AtomicReference&lt;String&gt; result = <span class="hljs-literal">null</span>;<br>        <span class="hljs-comment">//通过一条callback线程来处理响应的数据信息</span><br>        future.whenComplete((retValue,exception)-&gt;&#123;<br>           <span class="hljs-keyword">if</span>(exception==<span class="hljs-literal">null</span>)&#123;<br>               System.out.println(retValue);<br>               result.set(retValue);<br>           &#125; <span class="hljs-keyword">else</span> &#123;<br>               exception.printStackTrace();<br>           &#125;<br>        &#125;);<br>        <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;通过一条callback线程来处理响应的数据信息,所以这个时候获取不到信息响应&quot;</span>;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这样的调用是借助了callback线程来帮我们处理原先的数据内容，关于dubbo里面的异步化调用，我借用了官方的一张图来进行展示：  </p>
+<p><img src="https://www.javazhiyin.com/wp-content/uploads/2020/01/java7-1578536515.png" srcset="/img/loading.gif" lazyload alt="大白话带你梳理一下Dubbo的那些事儿" title="大白话带你梳理一下Dubbo的那些事儿">  </p>
+<p>我们上边讲解的众多方法都只是针对于dubbo的客户端异步化，并没有讲解关于服务端的异步化处理，这是因为结合dubbo的业务线程池模型来思考，服务端的异步化处理比较鸡肋（因为dubbo内部服务端的线程池本身就是异步化调用的了）。</p>
+<p>当然dubbo 2.6 里面对于接口异步化调用的配置到了2.7版本依旧有效。</p>
+<h3 id="三大中心的改造"><a href="#三大中心的改造" class="headerlink" title="三大中心的改造"></a>三大中心的改造</h3><p><strong>注册中心</strong></p>
+<p>在dubbo2.7之前，dubbo主要还是由consumer，provider ，register组成，然而在2.7版本之后，dubbo的注册中心被拆解为了三个中心，分别是原先的<strong>注册中心</strong>和<strong>元数据中心</strong>以及<strong>配置中心</strong>。</p>
+<p><strong>元数据配置</strong></p>
+<p>在dubbo2.7版本中，将原先注册在zk上边的过多数据进行了注册拆分，这样能够保证减少对于zk端的压力。具体配置如下：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">dubbo:registry</span> <span class="hljs-attr">address</span>=<span class="hljs-string">“zookeeper://127.0.0.1:2181”</span> <span class="hljs-attr">simplified</span>=<span class="hljs-string">&quot;true&quot;</span>/&gt;</span><br></code></pre></td></tr></table></figure>
+
+<p>简化了相应配置之后，dubbo也只会上传一些必要的服务治理数据了，简化版本的服务数据只剩下下边这些信息：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs xml">dubbo://30.5.120.185:20880/com.sise.TestService?<br>application=test-provider&amp;<br>dubbo=2.0.2&amp;<br>release=2.7.0&amp;<br>timestamp=1554982201973<br></code></pre></td></tr></table></figure>
+
+<p>对于其他的元数据信息将会被存储到一些元数据中心里面，例如说redis，nacos，zk等</p>
+<p>元数据配置改造主要解决的问题是：推送量大 -&gt; 存储数据量大 -&gt; 网络传输量大 -&gt; 延迟严重</p>
+<h2 id="配置中心"><a href="#配置中心" class="headerlink" title="配置中心"></a>配置中心</h2><p>dubbo2.7开始支持多种分布式配置中心的组件。例如说：zk，Spring Cloud Config, Apollo, Nacos，关于这部分的配置网上的资料也比较多，我就不在这里细说了。</p>
+<p><strong>END</strong></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Dubbo/">#Dubbo</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>大白话带你梳理一下Dubbo的那些事儿</div>
+      <div>https://kanchai.club/2022/12/10/大白话带你梳理一下Dubbo的那些事儿/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>625</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年12月10日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/12/10/%E5%AF%BC%E8%88%AA%E6%8E%A5%E5%8F%A3%E8%B0%83%E7%94%A8/" title="">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile"></span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/12/10/%E5%AD%A6%E4%B9%A0spring%20cloud%20bus%20%E4%BD%BF%E7%94%A8%EF%BC%8C%E8%87%AA%E5%AE%9A%E4%B9%89BUS%E4%BA%8B%E4%BB%B6/" title="SpringCloud bus 使用介绍">
+                        <span class="hidden-mobile">SpringCloud bus 使用介绍</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+    <div id="giscus" class="giscus"></div>
+    <script type="text/javascript">
+      Fluid.utils.loadComments('#giscus', function() {
+        var options = {"repo":"stupdit1t/625","repo-id":"MDEwOlJlcG9zaXRvcnkyNDQ3ODMzOTM=","category":"General","category-id":"DIC_kwDODpcZIc4CSeTH","theme-light":"light","theme-dark":"dark","mapping":"pathname","reactions-enabled":1,"emit-metadata":0,"input-position":"top","lang":"zh-CN","//mapping":"title"};
+        var attributes = {};
+        for (let option in options) {
+          if (!option.startsWith('theme-')) {
+            var key = option.startsWith('data-') ? option : 'data-' + option;
+            attributes[key] = options[option];
+          }
+        }
+        var light = 'light';
+        var dark = 'dark';
+        window.GiscusThemeLight = light;
+        window.GiscusThemeDark = dark;
+        attributes['data-theme'] = document.documentElement.getAttribute('data-user-color-scheme') === 'dark' ? dark : light;
+        for (let attribute in attributes) {
+          var value = attributes[attribute];
+          if (value === undefined || value === null || value === '') {
+            delete attributes[attribute];
+          }
+        }
+        var s = document.createElement('script');
+        s.setAttribute('src', 'https://giscus.app/client.js');
+        s.setAttribute('crossorigin', 'anonymous');
+        for (let attribute in attributes) {
+          s.setAttribute(attribute, attributes[attribute]);
+        }
+        var ss = document.getElementsByTagName('script');
+        var e = ss.length > 0 ? ss[ss.length - 1] : document.head || document.documentElement;
+        e.parentNode.insertBefore(s, e.nextSibling);
+      });
+    </script>
+    <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/stupdit1t" target="_blank" rel="nofollow noopener"><span>625</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
