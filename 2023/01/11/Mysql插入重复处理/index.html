@@ -18,24 +18,24 @@
   <meta name="author" content="625">
   <meta name="keywords" content="">
   
-    <meta name="description" content="点击标题查看详情">
+    <meta name="description" content="1.insert ignore into 重复忽略掉  1insert ignore into test_user values(1,&quot;张三&quot;,2)  2.on duplicate key update 唯一约束重复更新  1insert into test_user values(1,&quot;张三&quot;,2) on duplicate key update age">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Redis基本介绍">
-<meta property="og:url" content="https://kanchai.club/2022/12/10/Redis%E5%9F%BA%E6%9C%AC%E9%80%9A%E8%AE%AF%E6%A8%A1%E5%9E%8B/index.html">
+<meta property="og:title" content="Mysql插入重复处理">
+<meta property="og:url" content="https://kanchai.club/2023/01/11/Mysql%E6%8F%92%E5%85%A5%E9%87%8D%E5%A4%8D%E5%A4%84%E7%90%86/index.html">
 <meta property="og:site_name" content="625">
-<meta property="og:description" content="点击标题查看详情">
+<meta property="og:description" content="1.insert ignore into 重复忽略掉  1insert ignore into test_user values(1,&quot;张三&quot;,2)  2.on duplicate key update 唯一约束重复更新  1insert into test_user values(1,&quot;张三&quot;,2) on duplicate key update age">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2022-12-10T08:53:33.525Z">
-<meta property="article:modified_time" content="2022-12-10T08:53:33.525Z">
+<meta property="article:published_time" content="2023-01-11T00:48:46.626Z">
+<meta property="article:modified_time" content="2023-01-11T01:00:45.751Z">
 <meta property="article:author" content="625">
-<meta property="article:tag" content="redis基本介绍">
+<meta property="article:tag" content="Mysql">
 <meta name="twitter:card" content="summary_large_image">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>Redis基本介绍 - 625</title>
+  <title>Mysql插入重复处理 - 625</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -228,7 +228,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="Redis基本介绍"></span>
+            <span id="subtitle" data-typed-text="Mysql插入重复处理"></span>
           
         </div>
 
@@ -244,8 +244,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2022-12-10 16:53" pubdate>
-          2022年12月10日 下午
+        <time datetime="2023-01-11 08:48" pubdate>
+          2023年1月11日 早上
         </time>
       </span>
     
@@ -256,7 +256,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          8 字
+          399 字
         
       </span>
     
@@ -267,7 +267,7 @@
         
         
         
-          1 分钟
+          4 分钟
         
       </span>
     
@@ -313,13 +313,29 @@
         <div id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">Redis基本介绍</h1>
+            <h1 style="display: none">Mysql插入重复处理</h1>
             
             
               <div class="markdown-body">
                 
-                <p>点击标题查看详情</p>
-<span id="more"></span>
+                <h3 id="1-insert-ignore-into"><a href="#1-insert-ignore-into" class="headerlink" title="1.insert ignore into"></a>1.insert ignore into</h3><blockquote>
+<p>重复忽略掉</p>
+</blockquote>
+<figure class="highlight n1ql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs n1ql"><span class="hljs-keyword">insert</span> <span class="hljs-keyword">ignore</span> <span class="hljs-keyword">into</span> test_user <span class="hljs-keyword">values</span>(<span class="hljs-number">1</span>,<span class="hljs-string">&quot;张三&quot;</span>,<span class="hljs-number">2</span>)<br></code></pre></td></tr></table></figure>
+
+<h3 id="2-on-duplicate-key-update"><a href="#2-on-duplicate-key-update" class="headerlink" title="2.on duplicate key update"></a>2.on duplicate key update</h3><blockquote>
+<p>唯一约束重复更新</p>
+</blockquote>
+<figure class="highlight n1ql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs n1ql"><span class="hljs-keyword">insert</span> <span class="hljs-keyword">into</span> test_user <span class="hljs-keyword">values</span>(<span class="hljs-number">1</span>,<span class="hljs-string">&quot;张三&quot;</span>,<span class="hljs-number">2</span>) <span class="hljs-keyword">on</span> duplicate <span class="hljs-keyword">key</span> <span class="hljs-keyword">update</span> age = <span class="hljs-number">3</span><br></code></pre></td></tr></table></figure>
+<h3 id="3-replace-into"><a href="#3-replace-into" class="headerlink" title="3.replace into"></a>3.replace into</h3><blockquote>
+<p>无脑替换插入</p>
+</blockquote>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">replace</span> into test_user values(<span class="hljs-number">2</span>,<span class="hljs-string">&quot;张三&quot;</span>,<span class="hljs-number">2</span>)<br></code></pre></td></tr></table></figure>
+
+<h3 id="4-insert-if-not-exists"><a href="#4-insert-if-not-exists" class="headerlink" title="4.insert if not exists"></a>4.insert if not exists</h3><blockquote>
+<p>配合where条件，不存在则插入</p>
+</blockquote>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs pgsql"><span class="hljs-keyword">insert</span> <span class="hljs-keyword">into</span> test_user(id,<span class="hljs-type">name</span>,age) <span class="hljs-keyword">select</span> <span class="hljs-number">4</span>,&quot;张三&quot;,<span class="hljs-number">2</span> <span class="hljs-keyword">from</span> test_user <span class="hljs-keyword">where</span> <span class="hljs-keyword">not</span> <span class="hljs-keyword">EXISTS</span> ( <span class="hljs-keyword">select</span> id <span class="hljs-keyword">from</span> test_user <span class="hljs-keyword">where</span> id = <span class="hljs-number">4</span>) <span class="hljs-keyword">limit</span> <span class="hljs-number">1</span><br></code></pre></td></tr></table></figure>
                 
               </div>
             
@@ -337,7 +353,7 @@
     
       <span class="category-chain">
         
-  <a href="/categories/Redis/" class="category-chain-item">Redis</a>
+  <a href="/categories/Mysql/" class="category-chain-item">Mysql</a>
   
   
 
@@ -352,7 +368,7 @@
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
-        <a href="/tags/redis%E5%9F%BA%E6%9C%AC%E4%BB%8B%E7%BB%8D/">#redis基本介绍</a>
+        <a href="/tags/Mysql/">#Mysql</a>
       
     </div>
   
@@ -364,8 +380,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>Redis基本介绍</div>
-      <div>https://kanchai.club/2022/12/10/Redis基本通讯模型/</div>
+      <div>Mysql插入重复处理</div>
+      <div>https://kanchai.club/2023/01/11/Mysql插入重复处理/</div>
     </div>
     <div class="license-meta">
       
@@ -377,7 +393,7 @@
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2022年12月10日</div>
+          <div>2023年1月11日</div>
         </div>
       
       
@@ -409,18 +425,12 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2022/12/10/Redis%E5%9F%BA%E6%9C%AC%E4%BB%8B%E7%BB%8D/" title="Redis基本介绍">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Redis基本介绍</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2022/12/10/Mysql%E7%9F%A5%E8%AF%86%E7%82%B9%E5%9B%9E%E9%A1%BE/" title="Mysql通篇回顾">
-                        <span class="hidden-mobile">Mysql通篇回顾</span>
+                      <a href="/2022/12/13/about/" title="about">
+                        <span class="hidden-mobile">about</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
